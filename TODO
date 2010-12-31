@@ -1,0 +1,18 @@
+* Tests for requests.
+* Fix .do.
+* Add namespaces.
+* Add XML start/end requests.
+* Add command line options.
+* Use standard cat method for arguments.
+* Add output format support.
+* Add inlines.
+* Add troffxml output format.
+* Add xml output format.
+* Add fo output format.
+* Add utf8 output format.
+* Implement basic me support.
+* Implement advanced me support.
+* Implement basic ms support.
+* Implement basic mm support.
+* Test non-breaking requests.
+* Test non-breaking macros.
