@@ -87,8 +87,21 @@ class NumericEscape(Escape):
         self.state = state
         self.name = name
         self.increment = increment
+        self.reg = None
+        self.val = None
     def __str__(self):
-        return ""
+        try:
+            if self.val is None:
+                self.reg = self.state.numregs[self.name](self.state)
+                self.val = self.reg.value(self.increment)
+            log("reg", self.reg, self.increment)
+            log("regv", self.val)
+            s = str(self.val)
+            log("regs", s)
+            return s
+        except Exception as e:
+            log(e)
+            return "0"
 
 class DelayedEscape(Escape):
     def __init__(self, state, data):
@@ -505,6 +518,7 @@ class ParserState:
         self.env = env
         self.flags = [flags]
         self.requests = {}
+        self.numregs = {}
         self.nregs = {}
         self.copy_until = None
         self.copy_to = None

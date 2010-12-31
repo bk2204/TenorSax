@@ -1,6 +1,7 @@
 import roff2xml.sources.troff.stringlike
 
 from roff2xml.sources.troff import log
+from roff2xml.sources.troff.numeric import IntegerNumberRegister
 
 class RequestImplementation(roff2xml.sources.troff.stringlike.StringNamespacedData):
     F_LONGLAST = 1
@@ -81,6 +82,41 @@ class RequestImpl_ig(RequestImplementation):
             self.state.set_copy_mode(None, "")
         else:
             self.state.set_copy_mode(None, args[0])
+
+class RequestImpl_nr(RequestImplementation):
+    flags = 0
+    def max_args(self):
+        return 3
+    @staticmethod
+    def _value(cur, diff):
+        try:
+            if diff[0] in "+-":
+                return cur + int(diff)
+            return int(diff)
+        except:
+            return cur
+    def execute(self, callinfo):
+        args = callinfo.args
+        diff = 0
+        inc = 0
+        if len(args) == 0:
+            return
+        name = args[0]
+        if len(args) >= 2:
+            diff = args[1]
+        try:
+            if len(args) >= 3:
+                inc = int(args[2])
+        except:
+            inc = 0
+        curval = 0
+        if name in self.state.numregs:
+            # We don't use value() here because it will autoincrement.  We don't
+            # want that.
+            curval = self.state.numregs[name].val
+        log("curval", curval)
+        self.state.numregs[name] = IntegerNumberRegister(self.state, name,
+                self._value(curval, diff), inc, "0")
 
 class RequestImpl_rm(RequestImplementation):
     flags = RequestImplementation.F_NAMEARG

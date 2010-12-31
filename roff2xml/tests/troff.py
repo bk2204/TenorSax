@@ -107,5 +107,22 @@ class IgnoreTests(TroffToTextTestCase):
     def test_ignore(self):
         self.assertEqual(self.t_run('.ig\nSome text\n..\n'), '')
 
+class NumericTests(TroffToTextTestCase):
+    def test_creation(self):
+        self.assertEqual(self.t_run('.nr no 5\n\\n(no\n'), '5\n')
+    def test_addition(self):
+        self.assertEqual(self.t_run('.nr no 5\n.nr no +3\n\\n(no\n'), '8\n')
+    def test_subtraction(self):
+        self.assertEqual(self.t_run('.nr no 5\n.nr no -3\n\\n(no\n'), '2\n')
+    def test_creation_with_increment(self):
+        self.assertEqual(self.t_run('.nr no 5 1\n\\n(no\n'), '5\n')
+    def test_increment(self):
+        self.assertEqual(self.t_run('.nr no 5 1\n\\n+(no \\n+(no\n'), '6 7\n')
+    def test_decrement(self):
+        self.assertEqual(self.t_run('.nr no 5 1\n\\n-(no \\n-(no\n'), '4 3\n')
+    def test_increment_decrement(self):
+        self.assertEqual(self.t_run('.nr no 5 1\n\\n+(no \\n-(no \\n-(no\n'),
+                '6 5 4\n')
+
 if __name__ == '__main__':
     unittest.main()
