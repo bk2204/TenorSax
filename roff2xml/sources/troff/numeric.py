@@ -1,10 +1,6 @@
 from roff2xml.sources.troff import log
 
 class NumberRegister:
-    pass
-
-class IntegerNumberRegister(NumberRegister):
-    func = staticmethod(int)
     def __init__(self, state, name, val, increment, fmt):
         self.state = state
         self.name = name
@@ -26,3 +22,9 @@ class IntegerNumberRegister(NumberRegister):
         return self
     def __str__(self):
         return str(self.val)
+
+class IntegerNumberRegister(NumberRegister):
+    func = staticmethod(int)
+
+class FloatNumberRegister(NumberRegister):
+    func = staticmethod(float)

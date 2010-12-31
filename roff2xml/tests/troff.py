@@ -128,5 +128,43 @@ class NumericTests(TroffToTextTestCase):
         self.assertEqual(self.t_run('.nr no 5 1\n\\n+(no \\n-(no \\n-(no\n'),
                 '6 5 4\n')
 
+class FloatTests(TroffToTextTestCase):
+    def test_creation_integer(self):
+        self.assertEqual(self.t_run('.do nrf no 5\n\\n(no\n'), '5.0\n')
+    def test_creation_float(self):
+        self.assertEqual(self.t_run('.do nrf no 5.2\n\\n(no\n'), '5.2\n')
+    def test_addition_integer(self):
+        self.assertEqual(self.t_run('.do nrf no 5\n.do nrf no +3\n\\n(no\n'),
+                '8.0\n')
+    def test_addition_float(self):
+        self.assertEqual(self.t_run('.do nrf no 5.2\n.do nrf no +3.6\n\\n(no\n'), '8.8\n')
+    def test_subtraction_integer(self):
+        self.assertEqual(self.t_run('.do nrf no 5\n.do nrf no -3\n\\n(no\n'),
+                '2.0\n')
+    def test_subtraction_float(self):
+        self.assertEqual(self.t_run('.do nrf no 5.2\n.do nrf no -3.6\n\\n(no\n'), '1.6\n')
+    def test_creation_with_increment_integer(self):
+        self.assertEqual(self.t_run('.do nrf no 5 1\n\\n(no\n'), '5.0\n')
+    def test_creation_with_increment_float(self):
+        self.assertEqual(self.t_run('.do nrf no 5.2 1.3\n\\n(no\n'), '5.2\n')
+    def test_increment_integer(self):
+        self.assertEqual(self.t_run('.do nrf no 5 1\n\\n+(no \\n+(no\n'),
+                '6.0 7.0\n')
+    def test_increment_float(self):
+        self.assertEqual(self.t_run('.do nrf no 5.2 1.3\n\\n+(no \\n+(no\n'),
+                '6.5 7.8\n')
+    def test_decrement_integer(self):
+        self.assertEqual(self.t_run('.do nrf no 5 1\n\\n-(no \\n-(no\n'),
+                '4.0 3.0\n')
+    def test_decrement_float(self):
+        self.assertEqual(self.t_run('.do nrf no 5.2 1.3\n\\n-(no \\n-(no\n'),
+                '3.9 2.6\n')
+    def test_increment_decrement_integer(self):
+        self.assertEqual(self.t_run('.do nrf no 5 1\n\\n+(no \\n-(no \\n-(no\n'),
+                '6.0 5.0 4.0\n')
+    def test_increment_decrement_float(self):
+        self.assertEqual(self.t_run('.do nrf no 5.2 1.3\n\\n+(no \\n-(no \\n-(no\n'),
+                '6.5 5.2 3.9\n')
+
 if __name__ == '__main__':
     unittest.main()

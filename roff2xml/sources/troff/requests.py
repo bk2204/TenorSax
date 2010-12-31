@@ -1,7 +1,7 @@
 import roff2xml.sources.troff.stringlike
 
 from roff2xml.sources.troff import log
-from roff2xml.sources.troff.numeric import IntegerNumberRegister
+from roff2xml.sources.troff.numeric import IntegerNumberRegister, FloatNumberRegister
 
 class RequestImplementation(roff2xml.sources.troff.stringlike.StringNamespacedData):
     F_LONGLAST = 1
@@ -83,16 +83,16 @@ class RequestImpl_ig(RequestImplementation):
         else:
             self.state.set_copy_mode(None, args[0])
 
-class RequestImpl_nr(RequestImplementation):
+class NumberRegisterRequestImplementation(RequestImplementation):
     flags = 0
     def max_args(self):
         return 3
-    @staticmethod
-    def _value(cur, diff):
+    @classmethod
+    def _value(klass, cur, diff):
         try:
             if diff[0] in "+-":
-                return cur + int(diff)
-            return int(diff)
+                return cur + klass.func(diff)
+            return klass.func(diff)
         except:
             return cur
     def execute(self, callinfo):
@@ -106,7 +106,7 @@ class RequestImpl_nr(RequestImplementation):
             diff = args[1]
         try:
             if len(args) >= 3:
-                inc = int(args[2])
+                inc = self.func(args[2])
         except:
             inc = 0
         curval = 0
@@ -115,7 +115,18 @@ class RequestImpl_nr(RequestImplementation):
             # want that.
             curval = self.state.numregs[name].val
         log("curval", curval)
+        self.store(name, curval, diff, inc)
+
+class RequestImpl_nr(NumberRegisterRequestImplementation):
+    func = staticmethod(int)
+    def store(self, name, curval, diff, inc):
         self.state.numregs[name] = IntegerNumberRegister(self.state, name,
+                self._value(curval, diff), inc, "0")
+
+class RequestImpl_nrf(NumberRegisterRequestImplementation):
+    func = staticmethod(float)
+    def store(self, name, curval, diff, inc):
+        self.state.numregs[name] = FloatNumberRegister(self.state, name,
                 self._value(curval, diff), inc, "0")
 
 class RequestImpl_rm(RequestImplementation):
