@@ -6,10 +6,10 @@ import xml.sax.xmlreader
 
 from xml.sax.xmlreader import AttributesNSImpl as Attributes
 
-import roff2xml.sources.troff.requests
-import roff2xml.sources.troff.stringlike
+import tenorsax.sources.troff.requests
+import tenorsax.sources.troff.stringlike
 
-from roff2xml.sources.troff import log
+from tenorsax.sources.troff import log
 
 class Environment:
     def __init__(self):
@@ -449,7 +449,7 @@ class LineParser:
                     pstate = k.IN_COPY
                 if ctxt.endswith(self.state.copy_until):
                     s = ctxt[:-len(self.state.copy_until)] + "\n"
-                    mdata = roff2xml.sources.troff.stringlike.MacroData(self.state, s)
+                    mdata = tenorsax.sources.troff.stringlike.MacroData(self.state, s)
                     if self.state.copy_to is not None:
                         self.state.requests[self.state.copy_to] = mdata
                     self.state.set_copy_mode(None, None)
@@ -525,7 +525,7 @@ class ParserState:
         self.macroargs = []
         self._initialize_requests()
     def _initialize_requests(self):
-        for k, v in roff2xml.sources.troff.requests.__dict__.items():
+        for k, v in tenorsax.sources.troff.requests.__dict__.items():
             if k.startswith("RequestImpl_"):
                 self.requests[k[12:]] = v
     def set_copy_mode(self, macro, ending):

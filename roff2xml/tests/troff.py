@@ -2,14 +2,14 @@
 
 import unittest
 
-import roff2xml.sources.troff.parse
-import roff2xml.filters.xslt
+import tenorsax.sources.troff.parse
+import tenorsax.filters.xslt
 
 class TroffToTextTestCase(unittest.TestCase):
     @staticmethod
     def t_run(inp):
-        f = roff2xml.filters.xslt.TextXSLTTransformer("xslt/trim.xsl")
-        p = roff2xml.sources.troff.parse.Parser(f)
+        f = tenorsax.filters.xslt.TextXSLTTransformer("xslt/trim.xsl")
+        p = tenorsax.sources.troff.parse.Parser(f)
         p.parse(inp)
         return f.get_string()
 

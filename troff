@@ -3,13 +3,13 @@
 import sys
 import xml.sax.saxutils
 
-import roff2xml.sources.troff.parse
-import roff2xml.filters.xslt
+import tenorsax.sources.troff.parse
+import tenorsax.filters.xslt
 
 writer = xml.sax.saxutils.XMLGenerator(encoding="UTF-8")
 if len(sys.argv) > 1:
-    f = roff2xml.filters.xslt.XSLTTransformer(writer, sys.argv[1])
+    f = tenorsax.filters.xslt.XSLTTransformer(writer, sys.argv[1])
 else:
     f = writer
-p = roff2xml.sources.troff.parse.Parser(f)
+p = tenorsax.sources.troff.parse.Parser(f)
 p.parse("".join(sys.stdin))

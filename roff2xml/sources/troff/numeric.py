@@ -1,4 +1,4 @@
-from roff2xml.sources.troff import log
+from tenorsax.sources.troff import log
 
 class NumberRegister:
     def __init__(self, state, name, val, increment, fmt):

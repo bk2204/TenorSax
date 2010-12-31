@@ -1,6 +1,6 @@
 PYTHON3		= python3
 ENVVARS		= PYTHONPATH=.
-SCRIPT		= roff2xml/tests/troff.py
+SCRIPT		= tenorsax/tests/troff.py
 
 test check:
 	$(ENVVARS) $(PYTHON3) $(SCRIPT)

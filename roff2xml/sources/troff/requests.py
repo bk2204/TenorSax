@@ -1,13 +1,13 @@
-import roff2xml.sources.troff.stringlike
+import tenorsax.sources.troff.stringlike
 
-from roff2xml.sources.troff import log
-from roff2xml.sources.troff.numeric import IntegerNumberRegister, FloatNumberRegister
+from tenorsax.sources.troff import log
+from tenorsax.sources.troff.numeric import IntegerNumberRegister, FloatNumberRegister
 
-class RequestImplementation(roff2xml.sources.troff.stringlike.StringNamespacedData):
+class RequestImplementation(tenorsax.sources.troff.stringlike.StringNamespacedData):
     F_LONGLAST = 1
     F_NAMEARG = 2
     def __init__(self, state):
-        roff2xml.sources.troff.stringlike.StringNamespacedData.__init__(self, state)
+        tenorsax.sources.troff.stringlike.StringNamespacedData.__init__(self, state)
         self.flags = 0
     def max_args(self):
         return 0
@@ -26,7 +26,7 @@ class RequestImpl_br(RequestImplementation):
 
 class RequestImpl_do(RequestImplementation):
     def execute(self, callinfo):
-        from roff2xml.sources.troff.parse import Invocable
+        from tenorsax.sources.troff.parse import Invocable
         req = Invocable(self.state, *callinfo.args)
         try:
             macro = self.state.requests[req.name](self.state)
@@ -68,7 +68,7 @@ class RequestImpl_ds(RequestImplementation):
             return
         elif len(args) == 1:
             args.append("")
-        self.state.requests[args[0]] = roff2xml.sources.troff.stringlike.StringData(self.state, args[1])
+        self.state.requests[args[0]] = tenorsax.sources.troff.stringlike.StringData(self.state, args[1])
 
 class RequestImpl_ig(RequestImplementation):
     flags = 0
