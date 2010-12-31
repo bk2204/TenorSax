@@ -16,6 +16,8 @@ class TroffToTextTestCase(unittest.TestCase):
 class RequestTests(TroffToTextTestCase):
     def test_rename(self):
         self.assertEqual(self.t_run(".rn br BR\nabc\n.BR\ndef\n"), "abc\ndef\n")
+    def test_remove(self):
+        self.assertEqual(self.t_run(".rm br\nabc\n.br\ndef\n"), "abc def\n")
 
 class StringTests(TroffToTextTestCase):
     def setUp(self):
@@ -39,6 +41,9 @@ class StringTests(TroffToTextTestCase):
     def test_rename(self):
         self.assertEqual(self.t_run(self.dd + self.tx + '.rn DD D2\n\\*(\\*(D2\n'),
                 "Text\n")
+    def test_remove(self):
+        self.assertEqual(self.t_run(self.dd + self.tx + '.rm DD\n\\*(DD\n'),
+                "")
 
 class MacroTests(TroffToTextTestCase):
     def setUp(self):
@@ -63,6 +68,10 @@ class MacroTests(TroffToTextTestCase):
     def test_rename(self):
         self.assertEqual(self.t_run(self.aa + self.an + '.rn AN BN\n.BN\n'),
                 "abc\ndef\njkl jkl\n")
+    def test_remove(self):
+        self.assertEqual(self.t_run(self.aa + self.an + '.rm AN\n.AN\n'), "")
+    def test_remove_within(self):
+        self.assertEqual(self.t_run(self.aa + self.an + '.rm AA\n.AN\n'), "jkl\n")
     def test_call_from_macro(self):
         self.assertEqual(self.t_run(self.aa + self.an + '.AN\n'),
                 "abc\ndef\njkl jkl\n")

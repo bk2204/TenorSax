@@ -80,6 +80,18 @@ class RequestImpl_ig(RequestImplementation):
         else:
             self.state.set_copy_mode(None, args[0])
 
+class RequestImpl_rm(RequestImplementation):
+    flags = RequestImplementation.F_NAMEARG
+    def __init__(self, state):
+        RequestImplementation.__init__(self, state)
+    def max_args(self):
+        return 1
+    def execute(self, callinfo):
+        args = callinfo.args
+        if len(args) < 1:
+            return
+        del self.state.requests[args[0]]
+
 class RequestImpl_rn(RequestImplementation):
     flags = RequestImplementation.F_NAMEARG
     def __init__(self, state):
