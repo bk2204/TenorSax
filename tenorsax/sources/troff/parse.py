@@ -207,17 +207,15 @@ class LineParser:
         except KeyError:
             pass
     def _cur_is_long_last_arg(self):
-        if self.curreq is None:
+        try:
+            return self.curreq.arg_flags(len(self.items)-1) & self.curreq.F_TERMINAL
+        except AttributeError:
             return False
-        if self.curreq.max_args() != len(self.items):
-            return False
-        return self.curreq.long_last_arg()
     def _cur_is_name_arg(self):
-        if self.curreq is None:
+        try:
+            return self.curreq.arg_flags(len(self.items)-1) & self.curreq.F_NAME
+        except AttributeError:
             return False
-        if len(self.items) != 1:
-            return False
-        return self.curreq.first_arg_is_name()
     def _peek_next_character(self):
         if len(self.data) == 0:
             raise StopIteration

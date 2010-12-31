@@ -3,6 +3,8 @@ class StringNamespacedData:
         self.state = state
     def max_args(self):
         return 0
+    def arg_flags(self, i):
+        return 0
     def preparse(self):
         pass
     def postparse(self):

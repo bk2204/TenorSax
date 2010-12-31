@@ -4,17 +4,24 @@ from tenorsax.sources.troff import log
 from tenorsax.sources.troff.numeric import IntegerNumberRegister, FloatNumberRegister
 
 class RequestImplementation(tenorsax.sources.troff.stringlike.StringNamespacedData):
-    F_LONGLAST = 1
-    F_NAMEARG = 2
+    F_TERMINAL = 1
+    F_NAME = 2
     def __init__(self, state):
         tenorsax.sources.troff.stringlike.StringNamespacedData.__init__(self, state)
         self.flags = 0
     def max_args(self):
         return 0
-    def long_last_arg(self):
-        return self.flags & self.F_LONGLAST
-    def first_arg_is_name(self):
-        return self.flags & self.F_NAMEARG
+    def _arg_flags(self, i):
+        return 0
+    def arg_flags(self, i):
+        try:
+            return self._arg_flags(i)
+        except KeyError:
+            return 0
+    #def long_last_arg(self):
+    #    return self.flags & self.F_LONGLAST
+    #def first_arg_is_name(self):
+    #    return self.flags & self.F_NAMEARG
     def __str__(self):
         return ""
 
@@ -41,9 +48,8 @@ class RequestImpl_do(RequestImplementation):
         self.state.pop_flags()
 
 class RequestImpl_de(RequestImplementation):
-    def __init__(self, state):
-        RequestImplementation.__init__(self, state)
-        self.flags = self.F_NAMEARG
+    def _arg_flags(self, i):
+        return (self.F_NAME, self.F_NAME)[i]
     def max_args(self):
         return 2
     def execute(self, callinfo):
@@ -57,9 +63,8 @@ class RequestImpl_de(RequestImplementation):
             self.state.set_copy_mode(args[0], args[1])
 
 class RequestImpl_ds(RequestImplementation):
-    def __init__(self, state):
-        RequestImplementation.__init__(self, state)
-        self.flags = self.F_LONGLAST | self.F_NAMEARG
+    def _arg_flags(self, i):
+        return (self.F_NAME, self.F_TERMINAL)[i]
     def max_args(self):
         return 2
     def execute(self, callinfo):
@@ -71,9 +76,8 @@ class RequestImpl_ds(RequestImplementation):
         self.state.requests[args[0]] = tenorsax.sources.troff.stringlike.StringData(self.state, args[1])
 
 class RequestImpl_ig(RequestImplementation):
-    flags = 0
-    def __init__(self, state):
-        RequestImplementation.__init__(self, state)
+    def _arg_flags(self, i):
+        return (self.F_NAME,)[i]
     def max_args(self):
         return 1
     def execute(self, callinfo):
@@ -84,7 +88,8 @@ class RequestImpl_ig(RequestImplementation):
             self.state.set_copy_mode(None, args[0])
 
 class NumberRegisterRequestImplementation(RequestImplementation):
-    flags = 0
+    def _arg_flags(self, i):
+        return (self.F_NAME, 0, 0)[i]
     def max_args(self):
         return 3
     @classmethod
@@ -130,9 +135,8 @@ class RequestImpl_nrf(NumberRegisterRequestImplementation):
                 self._value(curval, diff), inc, "0")
 
 class RequestImpl_rm(RequestImplementation):
-    flags = RequestImplementation.F_NAMEARG
-    def __init__(self, state):
-        RequestImplementation.__init__(self, state)
+    def _arg_flags(self, i):
+        return (self.F_NAME,)[i]
     def max_args(self):
         return 1
     def execute(self, callinfo):
@@ -142,9 +146,8 @@ class RequestImpl_rm(RequestImplementation):
         del self.state.requests[args[0]]
 
 class RequestImpl_rn(RequestImplementation):
-    flags = RequestImplementation.F_NAMEARG
-    def __init__(self, state):
-        RequestImplementation.__init__(self, state)
+    def _arg_flags(self, i):
+        return (self.F_NAME, self.F_NAME)[i]
     def max_args(self):
         return 2
     def execute(self, callinfo):
