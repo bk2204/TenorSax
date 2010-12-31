@@ -1,5 +1,7 @@
 import roff2xml.sources.troff.stringlike
 
+from roff2xml.sources.troff import log
+
 class RequestImplementation(roff2xml.sources.troff.stringlike.StringNamespacedData):
     F_LONGLAST = 1
     F_NAMEARG = 2

@@ -9,9 +9,7 @@ from xml.sax.xmlreader import AttributesNSImpl as Attributes
 import roff2xml.sources.troff.requests
 import roff2xml.sources.troff.stringlike
 
-def log(*args):
-    if "XML2ROFF_VERBOSE" in os.environ:
-        print(*args, file=sys.stderr)
+from roff2xml.sources.troff import log
 
 class Environment:
     def __init__(self):
