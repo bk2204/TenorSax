@@ -19,6 +19,10 @@ class RequestTests(TroffToTextTestCase):
     def test_remove(self):
         self.assertEqual(self.t_run(".rm br\nabc\n.br\ndef\n"), "abc def\n")
 
+class ExtendedModeTests(TroffToTextTestCase):
+    def test_basic(self):
+        self.assertEqual(self.t_run("abc\n.do br\ndef\n"), "abc\ndef\n")
+
 class StringTests(TroffToTextTestCase):
     def setUp(self):
         self.dd = ".de DD\ntx\n..\n"

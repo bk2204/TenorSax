@@ -26,16 +26,17 @@ class RequestImpl_br(RequestImplementation):
 
 class RequestImpl_do(RequestImplementation):
     def execute(self, callinfo):
-        req = Request(self.state, *callinfo.args)
+        from roff2xml.sources.troff.parse import Invocable
+        req = Invocable(self.state, *callinfo.args)
         try:
-            macro = self.state.requests[reqname](self.state)
+            macro = self.state.requests[req.name](self.state)
             macro.preparse()
             macro.execute(req)
             macro.postparse()
-        except:
+        except KeyError:
             pass
     def preparse(self):
-        self.state.push_flags(self.state.get_flags() | ParserState.F_EXTNAME)
+        self.state.push_flags(self.state.get_flags() | self.state.F_EXTNAME)
     def postparse(self):
         self.state.pop_flags()
 

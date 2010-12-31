@@ -204,7 +204,7 @@ class LineParser:
         try:
             self.curreq = self.state.requests[reqname](self.state)
             self.curreq.preparse()
-        except:
+        except KeyError:
             pass
     def _cur_is_long_last_arg(self):
         if self.curreq is None:
