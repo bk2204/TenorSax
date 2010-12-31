@@ -65,3 +65,17 @@ class RequestImpl_ds(RequestImplementation):
         elif len(args) == 1:
             args.append("")
         self.state.requests[args[0]] = roff2xml.sources.troff.stringlike.StringData(self.state, args[1])
+
+class RequestImpl_ig(RequestImplementation):
+    flags = 0
+    def __init__(self, state):
+        RequestImplementation.__init__(self, state)
+    def max_args(self):
+        return 1
+    def execute(self, callinfo):
+        args = callinfo.args
+        # FIXME: what to do in this case?
+        if len(args) == 0:
+            self.state.set_copy_mode(None, "")
+        else:
+            self.state.set_copy_mode(None, args[0])

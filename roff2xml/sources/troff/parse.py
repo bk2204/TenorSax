@@ -438,7 +438,9 @@ class LineParser:
                     pstate = k.IN_COPY
                 if ctxt.endswith(self.state.copy_until):
                     s = ctxt[:-len(self.state.copy_until)] + "\n"
-                    self.state.requests[self.state.copy_to] = roff2xml.sources.troff.stringlike.MacroData(self.state, s)
+                    mdata = roff2xml.sources.troff.stringlike.MacroData(self.state, s)
+                    if self.state.copy_to is not None:
+                        self.state.requests[self.state.copy_to] = mdata
                     self.state.set_copy_mode(None, None)
                     pstate = k.FLUSHLINE
             elif pstate == k.FLUSHLINE:
@@ -515,7 +517,7 @@ class ParserState:
             if k.startswith("RequestImpl_"):
                 self.requests[k[12:]] = v
     def set_copy_mode(self, macro, ending):
-        if macro is None or ending is None:
+        if ending is None:
             self.copy_to = None
             self.copy_until = None
             return

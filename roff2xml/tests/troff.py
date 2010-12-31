@@ -84,5 +84,9 @@ class MacroTests(TroffToTextTestCase):
 .AA text Some
 '''), 'Some\ntext\n')
 
+class IgnoreTests(TroffToTextTestCase):
+    def test_ignore(self):
+        self.assertEqual(self.t_run('.ig\nSome text\n..\n'), '')
+
 if __name__ == '__main__':
     unittest.main()
