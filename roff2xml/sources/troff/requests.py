@@ -77,7 +77,6 @@ class RequestImpl_ig(RequestImplementation):
         return 1
     def execute(self, callinfo):
         args = callinfo.args
-        # FIXME: what to do in this case?
         if len(args) == 0:
             self.state.set_copy_mode(None, "")
         else:
