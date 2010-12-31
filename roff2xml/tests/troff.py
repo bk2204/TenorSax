@@ -13,6 +13,10 @@ class TroffToTextTestCase(unittest.TestCase):
         p.parse(inp)
         return f.get_string()
 
+class RequestTests(TroffToTextTestCase):
+    def test_rename(self):
+        self.assertEqual(self.t_run(".rn br BR\nabc\n.BR\ndef\n"), "abc\ndef\n")
+
 class StringTests(TroffToTextTestCase):
     def setUp(self):
         self.dd = ".de DD\ntx\n..\n"
@@ -32,6 +36,9 @@ class StringTests(TroffToTextTestCase):
         self.assertEqual(self.t_run(self.dd + self.tx + "\*(\*(DD\n"), "Text\n")
     def test_parse_interpolation(self):
         self.assertEqual(self.t_run(self.ee + self.tx + "\*(\*(EE\n"), "Textt\n")
+    def test_rename(self):
+        self.assertEqual(self.t_run(self.dd + self.tx + '.rn DD D2\n\\*(\\*(D2\n'),
+                "Text\n")
 
 class MacroTests(TroffToTextTestCase):
     def setUp(self):
@@ -53,6 +60,9 @@ class MacroTests(TroffToTextTestCase):
     def test_quote_parsing(self):
         self.assertEqual(self.t_run(self.pr + self.aa +
             '.PR "AA exec"\n.AA "abc"def ghi"\n'), "AA exec\nabc\ndef\njkl\n")
+    def test_rename(self):
+        self.assertEqual(self.t_run(self.aa + self.an + '.rn AN BN\n.BN\n'),
+                "abc\ndef\njkl jkl\n")
     def test_call_from_macro(self):
         self.assertEqual(self.t_run(self.aa + self.an + '.AN\n'),
                 "abc\ndef\njkl jkl\n")
