@@ -4,5 +4,5 @@ import os
 import sys
 
 def log(*args):
-    if "XML2ROFF_VERBOSE" in os.environ:
+    if "TENORSAX_DEBUG" in os.environ:
         print(*args, file=sys.stderr)
