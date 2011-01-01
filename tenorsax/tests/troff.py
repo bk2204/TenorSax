@@ -128,6 +128,60 @@ class NumericTests(TroffToTextTestCase):
         self.assertEqual(self.t_run('.nr no 5 1\n\\n+(no \\n-(no \\n-(no\n'),
                 '6 5 4\n')
 
+class NumericParsingTests(TroffToTextTestCase):
+    def test_addition(self):
+        self.assertEqual(self.t_run('.nr no 5+5\n\\n(no\n'), '10\n')
+    def test_subtraction(self):
+        self.assertEqual(self.t_run('.nr no 8-5\n\\n(no\n'), '3\n')
+    def test_multiplication(self):
+        self.assertEqual(self.t_run('.nr no 8*5\n\\n(no\n'), '40\n')
+    def test_division(self):
+        self.assertEqual(self.t_run('.nr no 36/5\n\\n(no\n'), '7\n')
+    def test_modulus(self):
+        self.assertEqual(self.t_run('.nr no 37%5\n\\n(no\n'), '2\n')
+    def test_lessthan_true(self):
+        self.assertEqual(self.t_run('.nr no 3<5\n\\n(no\n'), '1\n')
+    def test_lessthan_false(self):
+        self.assertEqual(self.t_run('.nr no 5<3\n\\n(no\n'), '0\n')
+    def test_lessthan_equal(self):
+        self.assertEqual(self.t_run('.nr no 3<3\n\\n(no\n'), '0\n')
+    def test_greaterthan_true(self):
+        self.assertEqual(self.t_run('.nr no 5>3\n\\n(no\n'), '1\n')
+    def test_greaterthan_false(self):
+        self.assertEqual(self.t_run('.nr no 3>5\n\\n(no\n'), '0\n')
+    def test_greaterthan_equal(self):
+        self.assertEqual(self.t_run('.nr no 3>5\n\\n(no\n'), '0\n')
+    def test_lessthanequal_true(self):
+        self.assertEqual(self.t_run('.nr no 3<=5\n\\n(no\n'), '1\n')
+    def test_lessthanequal_false(self):
+        self.assertEqual(self.t_run('.nr no 5<=3\n\\n(no\n'), '0\n')
+    def test_lessthanequal_equal(self):
+        self.assertEqual(self.t_run('.nr no 3<=3\n\\n(no\n'), '1\n')
+    def test_greaterthan_true(self):
+        self.assertEqual(self.t_run('.nr no 5>=3\n\\n(no\n'), '1\n')
+    def test_greaterthan_false(self):
+        self.assertEqual(self.t_run('.nr no 3>=5\n\\n(no\n'), '0\n')
+    def test_greaterthan_equal(self):
+        self.assertEqual(self.t_run('.nr no 3>=3\n\\n(no\n'), '1\n')
+    def test_equal_true(self):
+        self.assertEqual(self.t_run('.nr no 3=3\n\\n(no\n'), '1\n')
+    def test_equal_less(self):
+        self.assertEqual(self.t_run('.nr no 3=5\n\\n(no\n'), '0\n')
+    def test_equal_greater(self):
+        self.assertEqual(self.t_run('.nr no 5=3\n\\n(no\n'), '0\n')
+    def test_dblequal_true(self):
+        self.assertEqual(self.t_run('.nr no 3==3\n\\n(no\n'), '1\n')
+    def test_dblequal_less(self):
+        self.assertEqual(self.t_run('.nr no 3==5\n\\n(no\n'), '0\n')
+    def test_dblequal_greater(self):
+        self.assertEqual(self.t_run('.nr no 5==3\n\\n(no\n'), '0\n')
+    def test_notequal_false(self):
+        self.assertEqual(self.t_run('.nr no 3<>3\n\\n(no\n'), '0\n')
+    def test_notequal_less(self):
+        self.assertEqual(self.t_run('.nr no 3<>5\n\\n(no\n'), '1\n')
+    def test_notequal_greater(self):
+        self.assertEqual(self.t_run('.nr no 5<>3\n\\n(no\n'), '1\n')
+
 class FloatTests(TroffToTextTestCase):
     def test_creation_integer(self):
         self.assertEqual(self.t_run('.do nrf no 5\n\\n(no\n'), '5.0\n')

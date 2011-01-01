@@ -166,6 +166,43 @@ class NonBreakingInvocable(Invocable):
         Invocable.__init__(self, *args)
         self.brk = False
 
+def calculate(n1, op, n2):
+    """Evaluate a binary numeric expression."""
+    # NB: this does not use eval even where it might be shorter or cleaner to
+    # avoid any sort of arbitrary code execution.
+    if op == '+':
+        return n1 + n2
+    elif op == '-':
+        return n1 - n2
+    elif op == '*':
+        return n1 * n2
+    elif op == '/':
+        return n1 // n2
+    elif op == '%':
+        return n1 % n2
+    elif op == '&':
+        return int(bool(n1 and n2))
+    elif op == ':':
+        return int(bool(n1 or n2))
+    elif op == '<':
+        return int(n1 < n2)
+    elif op == '<=':
+        return int(n1 <= n2)
+    elif op == '>':
+        return int(n1 > n2)
+    elif op == '>=':
+        return int(n1 >= n2)
+    elif op == '=' or op == '==':
+        return int(n1 == n2)
+    elif op == '<>':
+        return int(n1 != n2)
+    elif op == '<?':
+        return min(n1, n2)
+    elif op == '>?':
+        return max(n1, n2)
+    else:
+        raise ValueError("undefined operation")
+
 class LineParserStateConstants:
     START = 0
     IN_REQNAME = 1
@@ -214,6 +251,16 @@ class LineParser:
     def _cur_is_name_arg(self):
         try:
             return self.curreq.arg_flags(len(self.items)-1) & self.curreq.F_NAME
+        except AttributeError:
+            return False
+    def _cur_is_numeric(self):
+        try:
+            return self.curreq.arg_flags(len(self.items)-1) & self.curreq.F_NUMERIC
+        except AttributeError:
+            return False
+    def _cur_is_incremental(self):
+        try:
+            return self.curreq.arg_flags(len(self.items)-1) & self.curreq.F_INCREMENTAL
         except AttributeError:
             return False
     def _peek_next_character(self):
@@ -265,6 +312,106 @@ class LineParser:
             return s
         else:
             return c
+    def _parse_numeric(self, pstate, c, nparens=0, inc=False):
+        """Parse a numerical expression and return its value."""
+        k = LineParserStateConstants
+        val = 0
+        curval = 0
+        stk = []
+        delay = False
+        stnum = True
+        nctxt = ""
+        op = None
+        npstate = pstate
+        incchar = ""
+        if inc and c in "+-":
+            incchar = c
+            c = self._next_character()
+        while True:
+            if c == '\n':
+                npstate = k.EOL
+                break
+            elif c == '(':
+                (npstate, val) = self._parse_numeric(pstate,
+                        self._next_character(), nparens+1, inc)
+                if npstate != pstate:
+                    break
+            elif c == ')':
+                if op is not None:
+                    val = calculate(val, op, curval)
+                npstate = pstate
+                break
+            elif c == self.state.env[0].ec and not delay:
+                esc = self._parse_escape()
+                self.inject(esc)
+                if esc.delay():
+                    delay = True
+            elif c.isspace():
+                if nparens == 0:
+                    pstate = k.SEPARATOR
+                    break
+            elif c in "0123456789.":
+                nctxt += c
+            elif c in "+-":
+                if len(nctxt) == 0:
+                    nctxt += c
+                else:
+                    try:
+                        curval = float(nctxt)
+                    except ValueError:
+                        curval = 0
+                    nctxt = ""
+                    stk.append(curval)
+                    if len(stk) == 2:
+                        val = calculate(stk[0], op, stk[1])
+                        stk = []
+                    op = c
+            elif c in "*/%&:":
+                log("nctxt", nctxt)
+                try:
+                    curval = float(nctxt)
+                except ValueError:
+                    curval = 0
+                nctxt = ""
+                stk.append(curval)
+                if len(stk) == 2:
+                    val = calculate(stk[0], op, stk[1])
+                    stk = []
+                op = c
+            elif c in "<>=":
+                try:
+                    curval = float(nctxt)
+                except ValueError:
+                    curval = 0
+                nctxt = ""
+                stk.append(curval)
+                if len(stk) == 2:
+                    val = calculate(stk[0], op, stk[1])
+                    stk = []
+                op = c
+                c = self._next_character()
+                s = op + c
+                if s in ["==", "<>", "<?", ">?", "<=", ">="]:
+                    op = s
+                else:
+                    # don't read another character
+                    continue
+            c = self._next_character()
+            # FIXME: this is broken
+            delay = False
+        try:
+            curval = float(nctxt)
+        except:
+            curval = 0
+        stk.append(curval)
+        if len(stk) == 2:
+            val = calculate(stk[0], op, stk[1])
+        elif op is not None or len(nctxt) != 0:
+            val = stk[0]
+        if nparens == 0:
+            self.items.append(incchar + str(val))
+        return (npstate, val)
+
     def _parse_escape(self):
         """Parse an escape and return it.
 
@@ -366,6 +513,9 @@ class LineParser:
                     pstate = k.IN_ARG
                 elif c.isspace():
                     pass
+                elif self._cur_is_numeric():
+                    inc = self._cur_is_incremental
+                    pstate = self._parse_numeric(pstate, c, inc=inc)[0]
                 elif c == '"':
                     pstate = k.IN_QUOTEDARG
                 else:
@@ -387,6 +537,9 @@ class LineParser:
                         pstate = k.IN_ARGDELAY
                 elif self._cur_is_long_last_arg():
                     ctxt += c
+                elif self._cur_is_numeric():
+                    inc = self._cur_is_incremental
+                    pstate = self._parse_numeric(pstate, c, inc=inc)[0]
                 elif c.isspace():
                     self.items.append(ctxt)
                     ctxt = ""

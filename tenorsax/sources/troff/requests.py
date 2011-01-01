@@ -6,6 +6,8 @@ from tenorsax.sources.troff.numeric import IntegerNumberRegister, FloatNumberReg
 class RequestImplementation(tenorsax.sources.troff.stringlike.StringNamespacedData):
     F_TERMINAL = 1
     F_NAME = 2
+    F_NUMERIC = 4
+    F_INCREMENTAL = 12
     def __init__(self, state):
         tenorsax.sources.troff.stringlike.StringNamespacedData.__init__(self, state)
         self.flags = 0
@@ -89,15 +91,15 @@ class RequestImpl_ig(RequestImplementation):
 
 class NumberRegisterRequestImplementation(RequestImplementation):
     def _arg_flags(self, i):
-        return (self.F_NAME, 0, 0)[i]
+        return (self.F_NAME, self.F_INCREMENTAL, self.F_NUMERIC)[i]
     def max_args(self):
         return 3
     @classmethod
     def _value(klass, cur, diff):
         try:
             if diff[0] in "+-":
-                return cur + klass.func(diff)
-            return klass.func(diff)
+                return cur + klass.func(float(diff))
+            return klass.func(float(diff))
         except:
             return cur
     def execute(self, callinfo):
@@ -111,7 +113,7 @@ class NumberRegisterRequestImplementation(RequestImplementation):
             diff = args[1]
         try:
             if len(args) >= 3:
-                inc = self.func(args[2])
+                inc = self.func(float(args[2]))
         except:
             inc = 0
         curval = 0
@@ -119,7 +121,6 @@ class NumberRegisterRequestImplementation(RequestImplementation):
             # We don't use value() here because it will autoincrement.  We don't
             # want that.
             curval = self.state.numregs[name].val
-        log("curval", curval)
         self.store(name, curval, diff, inc)
 
 class RequestImpl_nr(NumberRegisterRequestImplementation):
