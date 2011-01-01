@@ -220,5 +220,17 @@ class FloatTests(TroffToTextTestCase):
         self.assertEqual(self.t_run('.do nrf no 5.2 1.3\n\\n+(no \\n-(no \\n-(no\n'),
                 '6.5 5.2 3.9\n')
 
+class ExtensionTests(TroffToTextTestCase):
+    def setUp(self):
+        self.aa = ".de AA\ndisabled\n.br\n..\n.do de AAA\nenabled\n.br\n..\n"
+    def test_default(self):
+        self.assertEqual(self.t_run(self.aa + ".AAA\n"), "disabled\n")
+    def test_enable(self):
+        self.assertEqual(self.t_run(self.aa + ".do tenorsax ext 1\n.AAA\n"), "enabled\n")
+    def test_disabled(self):
+        self.assertEqual(self.t_run(self.aa + ".do tenorsax ext 0\n.AAA\n"), "disabled\n")
+    def test_disable(self):
+        self.assertEqual(self.t_run(self.aa + ".do tenorsax ext 1\n.do tenorsax ext 0\n.AAA\n"), "disabled\n")
+
 if __name__ == '__main__':
     unittest.main()

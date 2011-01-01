@@ -156,3 +156,25 @@ class RequestImpl_rn(RequestImplementation):
         if len(args) < 2:
             return
         self.state.requests[args[1]] = self.state.requests[args[0]]
+
+class RequestImpl_tenorsax(RequestImplementation):
+    def _arg_flags(self, i):
+        return 0
+    def max_args(self):
+        return 2
+    @staticmethod
+    def _get_boolean(s):
+        try:
+            val = int(s)
+        except ValueError:
+            if s.lower() in ("on", "enable", "enabled", "true", "yes"):
+                val = True
+            else:
+                val = False
+        return bool(val)
+    def execute(self, callinfo):
+        args = callinfo.args
+        if len(args) < 2:
+            return
+        if args[0] == "ext":
+            self.state.flags[0] = ~0 if self._get_boolean(args[1]) else 0
