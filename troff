@@ -1,15 +1,45 @@
 #!/usr/bin/python3
 
+import fileinput
+import optparse
+import os.path
 import sys
 import xml.sax.saxutils
 
 import tenorsax.sources.troff.parse
 import tenorsax.filters.xslt
 
+dirs = {
+    "tmac": ("/usr/local/share/tenorsax/tmac", "/usr/share/tenorsax/tmac",
+        "/usr/local/share/tmac", "/usr/share/tmac",
+        "/usr/share/groff/current/tmac", "./tmac"),
+    "xslt": ("/usr/local/share/tenorsax/xslt", "/usr/share/tenorsax/xslt",
+        "./xslt")
+}
+
+def find_first(type_, name):
+    try:
+        lst = dirs[type_]
+    except KeyError:
+        return None
+    for i in lst:
+        possible = i + "/" + name
+        if os.path.exists(possible):
+            return possible
+    return None
+
+parser = optparse.OptionParser()
+parser.add_option("-T", dest="fmt", default="troff-xml")
+parser.add_option("-s", dest="stylesheet")
+(options, args) = parser.parse_args()
+
 writer = xml.sax.saxutils.XMLGenerator(encoding="UTF-8")
-if len(sys.argv) > 1:
-    f = tenorsax.filters.xslt.XSLTTransformer(writer, sys.argv[1])
+if options.stylesheet:
+    f = tenorsax.filters.xslt.XSLTTransformer(writer, options.stylesheet)
+elif options.fmt in ("xml",):
+    ssheet = find_first("xslt", "format-" + options.fmt + ".xsl")
+    f = tenorsax.filters.xslt.XSLTTransformer(writer, ssheet)
 else:
     f = writer
 p = tenorsax.sources.troff.parse.Parser(f)
-p.parse("".join(sys.stdin))
+p.parse("".join(fileinput.input(files=args)))
