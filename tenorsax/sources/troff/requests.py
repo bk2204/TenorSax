@@ -1,5 +1,7 @@
 import tenorsax.sources.troff.stringlike
 
+from xml.sax.xmlreader import AttributesNSImpl as Attributes
+
 from tenorsax.sources.troff import log
 from tenorsax.sources.troff.numeric import IntegerNumberRegister, FloatNumberRegister
 
@@ -26,6 +28,22 @@ class RequestImplementation(tenorsax.sources.troff.stringlike.StringNamespacedDa
     #    return self.flags & self.F_NAMEARG
     def __str__(self):
         return ""
+
+class XMLRequestImplementation(RequestImplementation):
+    def _arg_flags(self, i):
+        return 0
+    def _tuple_from_qname(self, qname):
+        prefix = None
+        localname = None
+        uri = None
+        res = qname.split(':')
+        if len(res) == 1:
+            prefix = ""
+            localname = res[0]
+        else:
+            (prefix, localname) = res
+            uri = self.state.mapping[prefix]
+        return (prefix, uri, localname, qname)
 
 class RequestImpl_br(RequestImplementation):
     def execute(self, callinfo):
@@ -77,6 +95,21 @@ class RequestImpl_ds(RequestImplementation):
             args.append("")
         self.state.requests[args[0]] = tenorsax.sources.troff.stringlike.StringData(self.state, args[1])
 
+class RequestImpl_end(XMLRequestImplementation):
+    def _arg_flags(self, i):
+        return 0
+    def max_args(self):
+        return 1
+    def execute(self, callinfo):
+        args = callinfo.args
+        if len(args) < 1:
+            return
+        try:
+            element = self._tuple_from_qname(args[0])
+            self.state.ch.endElementNS((element[1], element[2]), element[3])
+        except:
+            pass
+
 class RequestImpl_ig(RequestImplementation):
     def _arg_flags(self, i):
         return (self.F_NAME,)[i]
@@ -88,6 +121,17 @@ class RequestImpl_ig(RequestImplementation):
             self.state.set_copy_mode(None, "")
         else:
             self.state.set_copy_mode(None, args[0])
+
+class RequestImpl_namespace(RequestImplementation):
+    def _arg_flags(self, i):
+        return 0
+    def max_args(self):
+        return 2
+    def execute(self, callinfo):
+        args = callinfo.args
+        if len(args) != 2:
+            return
+        self.state.mapping[args[0]] = args[1]
 
 class NumberRegisterRequestImplementation(RequestImplementation):
     def _arg_flags(self, i):
@@ -156,6 +200,27 @@ class RequestImpl_rn(RequestImplementation):
         if len(args) < 2:
             return
         self.state.requests[args[1]] = self.state.requests[args[0]]
+
+class RequestImpl_start(XMLRequestImplementation):
+    def max_args(self):
+        return 1024
+    def execute(self, callinfo):
+        args = callinfo.args
+        if len(args) < 1:
+            return
+        try:
+            attrs = {}
+            qnames = {}
+            element = self._tuple_from_qname(args[0])
+            for i in args[1:]:
+                item = i.split("=", 2)
+                attr = self._tuple_from_qname(item[0])
+                attrs[(attr[1], attr[2])] = item[1]
+                qnames[attr[3]] = item[1]
+            self.state.ch.startElementNS((element[1], element[2]), element[3],
+                    Attributes(attrs, qnames))
+        except:
+            pass
 
 class RequestImpl_tenorsax(RequestImplementation):
     def _arg_flags(self, i):

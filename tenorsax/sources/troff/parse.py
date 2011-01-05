@@ -632,32 +632,71 @@ class LineParser:
                     pstate = k.START
     __iter__ = parse
 
+class StackItem:
+    pass
+
+class ElementStackItem(StackItem):
+    def __init__(self, name, qname):
+        self.name = name
+        self.qname = qname
+    def end(self, ch):
+        ch.endElementNS(self.name, self.qname)
+    def __repr__(self):
+        return "ElementStackItem " + repr(self.name) + " " + self.qname
+
+class PrefixStackItem(StackItem):
+    def __init__(self, prefix):
+        self.prefix = prefix
+    def end(self, ch):
+        ch.endPrefixMapping(self.prefix)
+    def __repr__(self):
+        return "PrefixStackItem " + self.prefix
+
 class ContentHandlerWrapper:
     NS_TROFF = "http://ns.crustytoothpaste.net/troff"
-    def __init__(self, ch):
+    def __init__(self, ch, state):
         self.ch = ch
         self.stack = []
+        self.state = state
     def __getattr__(self, name):
         return getattr(self.ch, name)
+    def endDocument(self):
+        for i in reversed(self.stack):
+            i.end(self.ch)
+        self.ch.endDocument()
+    def startPrefixMapping(self, prefix, uri):
+        self.stack.append(PrefixStackItem(prefix))
+        self.ch.startPrefixMapping(prefix, uri)
+    def endPrefixMapping(self, prefix):
+        self.stack.pop().end(self.ch)
     def startElementNS(self, name, qname, attrs):
-        self.stack.append((name[0], name[1], qname))
+        if ':' in qname:
+            self.startPrefixMapping(qname.split(':')[0], name[0])
+        self.stack.append(ElementStackItem(name, qname))
         self.ch.startElementNS(name, qname, attrs)
     def endElementNS(self, name, qname):
-        self.ch.endElementNS(name, qname)
-        self.stack.pop()
+        self.stack.pop().end(self.ch)
+        while len(self.stack) > 0 and hasattr(self.stack[-1], "prefix"):
+            self.stack.pop().end(self.ch)
     def startBlock(self, attrs=None):
         self.startTroffElement("block", attrs)
     def endBlock(self, force=False):
+        if len(self.stack) == 0:
+            return
         if force:
             tos = self.stack[-1]
-            while tos[2] != "_troff:block":
-                self.endElementNS((tos[0], tos[1]), tos[2])
+            while hasattr(tos, "qname") and tos.qname != "_troff:block":
+                tos.end(self)
+                if len(self.stack) == 0:
+                    return
                 tos = self.stack[-1]
         self.endTroffElement("block")
         self.ignorableWhitespace("\n")
     def startTroffElement(self, localname, attrs=None):
         if attrs is None:
             attrs = Attributes({}, {})
+        for p, u in self.state.mapping.items():
+            self.startPrefixMapping(p, u)
         self.startElementNS((self.NS_TROFF, localname), "_troff:"+localname,
                 attrs)
     def endTroffElement(self, localname):
@@ -675,6 +714,7 @@ class ParserState:
         self.copy_to = None
         self.macroargs = []
         self._initialize_requests()
+        self.mapping = {}
     def _initialize_requests(self):
         for k, v in tenorsax.sources.troff.requests.__dict__.items():
             if k.startswith("RequestImpl_"):
@@ -733,17 +773,12 @@ class Parser:
         self.env = [Environment()]
         self.state = ParserState(self.env, 0)
         self.lp = LineParser(self.state, "")
-        self.state.ch = ContentHandlerWrapper(ch)
+        self.state.ch = ContentHandlerWrapper(ch, self.state)
     def _set_up(self):
         self.state.ch.startDocument()
-        self.state.ch.startPrefixMapping("_troff", self.state.ch.NS_TROFF)
         self.state.ch.startTroffElement("main")
         self.state.ch.startBlock()
     def _tear_down(self):
-        self.state.ch.endBlock(force=True)
-        self.state.ch.endTroffElement("main")
-        self.state.ch.endPrefixMapping("_troff")
-        self.state.ch.ignorableWhitespace("\n")
         self.state.ch.endDocument()
     def parse(self, string):
         self.lp.inject(string)
