@@ -202,6 +202,28 @@ class RequestImpl_rn(RequestImplementation):
             return
         self.state.requests[args[1]] = self.state.requests[args[0]]
 
+class RequestImpl_so(RequestImplementation):
+    def _arg_flags(self, i):
+        return 0
+    def max_args(self):
+        return 1
+    def execute(self, callinfo):
+        args = callinfo.args
+        if len(args) == 0:
+            return
+        s = ""
+        if args[0].startswith("/"):
+            path = args[0]
+        else:
+            d = os.path.dirname(self.state.filename)
+            path = os.path.join(d, args[0])
+        log("path", path)
+        s += '.do tenorsax filename "' + path + '"\n'
+        with open(path) as fp:
+            s += "".join(fp.readlines())
+        s += '.do tenorsax filename "' + self.state.filename + '"\n'
+        return (s, None)
+
 class RequestImpl_start(XMLRequestImplementation):
     def max_args(self):
         return 1024
