@@ -268,3 +268,5 @@ class RequestImpl_tenorsax(RequestImplementation):
             self.state.flags[0] = ~0 if self._get_boolean(args[1]) else 0
         elif args[0] == "filename":
             self.state.filename = args[1]
+        elif args[0] == "trace":
+            self.state.trace = int(args[1])

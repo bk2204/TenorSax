@@ -717,6 +717,7 @@ class ParserState:
         self._initialize_requests()
         self.mapping = {}
         self.filename = ""
+        self.trace = 0
     def _initialize_requests(self):
         for k, v in tenorsax.sources.troff.requests.__dict__.items():
             if k.startswith("RequestImpl_"):
