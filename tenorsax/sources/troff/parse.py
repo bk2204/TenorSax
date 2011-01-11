@@ -144,7 +144,8 @@ class Invocable(StringNamespacedParseObject):
             res = self.state.requests[self.name](self.state).execute(self)
             if res is not None:
                 (s, callinfo) = res
-                lp.inject(s, callinfo.args)
+                args = callinfo.args if callinfo is not None else None
+                lp.inject(s, args)
         except Exception as e:
             pass
     def postparse(self):
@@ -715,6 +716,7 @@ class ParserState:
         self.macroargs = []
         self._initialize_requests()
         self.mapping = {}
+        self.filename = ""
     def _initialize_requests(self):
         for k, v in tenorsax.sources.troff.requests.__dict__.items():
             if k.startswith("RequestImpl_"):
@@ -780,8 +782,16 @@ class Parser:
         self.state.ch.startBlock()
     def _tear_down(self):
         self.state.ch.endDocument()
-    def parse(self, string):
-        self.lp.inject(string)
+    def parse(self, finput):
+        try:
+            s = ""
+            for line in finput:
+                if finput.isfirstline():
+                    s += '.do tenorsax filename "' + finput.filename() + '"\n'
+                s += line
+            self.lp.inject(s)
+        except AttributeError:
+            self.lp.inject(finput)
         self._set_up()
         for item in self.lp.parse():
             log(item, type(item))

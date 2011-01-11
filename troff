@@ -42,4 +42,4 @@ elif options.fmt in ("xml",):
 else:
     f = writer
 p = tenorsax.sources.troff.parse.Parser(f)
-p.parse("".join(fileinput.input(files=args)))
+p.parse(fileinput.input(files=args))
