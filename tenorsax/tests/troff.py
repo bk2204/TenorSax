@@ -57,6 +57,7 @@ class MacroTests(TroffToTextTestCase):
         self.cc = ".de CC\ntext \\\\$1 here\nand here\n..\n"
         self.ff = ".de FF\n\\\\$1 \\\\$3\n..\n"
         self.gg = ".de GG\na b c\n.br d\ne f\ng h i\n..\n"
+        self.na = ".de NA\n\\\\$0\n..\n"
     def test_creation(self):
         self.assertEqual(self.t_run('.de AA\nSome text\n..\n.AA\n'),
                 'Some text\n')
@@ -98,6 +99,12 @@ class MacroTests(TroffToTextTestCase):
     def test_call_with_self(self):
         self.assertEqual(self.t_run(self.aa + self.cc + '.CC \\*(CC\n'),
                 "text text here and here and here\n")
+    def test_self_name(self):
+        self.assertEqual(self.t_run(self.na + '.NA arg\n'),
+                "NA\n")
+    def test_self_name_string(self):
+        self.assertEqual(self.t_run(self.na + '\\*(NA arg\n'),
+                "arg\n")
     def test_arguments(self):
         self.assertEqual(self.t_run(r'''.de AA
 \\$2

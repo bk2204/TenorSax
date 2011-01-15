@@ -150,7 +150,10 @@ class Invocable(StringNamespacedParseObject):
             pass
         if res is not None:
             (s, callinfo) = res
-            args = callinfo.args if callinfo is not None else None
+            args = None
+            if callinfo is not None:
+                args = [callinfo.name]
+                args.extend(callinfo.args)
             lp.inject(s, args)
     def postparse(self):
         try:
@@ -444,9 +447,8 @@ class LineParser:
         elif c == "$":
             try:
                 s = self._parse_escape_name()
-                # FIXME: handle \$0 correctly.
                 log("escape name is", s)
-                n = int(s) - 1
+                n = int(s)
                 log("nmacroargs", len(self.state.macroargs))
                 log("nmacroargs set", len(self.state.macroargs[-1]))
                 return CharacterEscape(self.state, self.state.macroargs[-1][n])
