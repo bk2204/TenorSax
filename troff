@@ -36,7 +36,7 @@ parser.add_option("-s", dest="stylesheet")
 writer = xml.sax.saxutils.XMLGenerator(encoding="UTF-8")
 if options.stylesheet:
     f = tenorsax.filters.xslt.XSLTTransformer(writer, options.stylesheet)
-elif options.fmt in ("xml",):
+elif options.fmt in ("xml", "fo"):
     ssheet = find_first("xslt", "format-" + options.fmt + ".xsl")
     f = tenorsax.filters.xslt.XSLTTransformer(writer, ssheet)
 else:
