@@ -9,7 +9,7 @@ from xml.sax.xmlreader import AttributesNSImpl as Attributes
 import tenorsax.sources.troff.requests
 import tenorsax.sources.troff.stringlike
 
-from tenorsax.sources.troff import log
+from tenorsax.sources.troff import *
 
 class Environment:
     def __init__(self):
@@ -140,14 +140,18 @@ class Macro(StringNamespacedParseObject):
 
 class Invocable(StringNamespacedParseObject):
     def invoke(self, lp):
+        res = None
         try:
             res = self.state.requests[self.name](self.state).execute(self)
-            if res is not None:
-                (s, callinfo) = res
-                args = callinfo.args if callinfo is not None else None
-                lp.inject(s, args)
-        except Exception as e:
+        except KeyError:
+            trace(self.state, TRACE_UNDEF, "request", self.name,
+                "is not defined")
+        except Exception:
             pass
+        if res is not None:
+            (s, callinfo) = res
+            args = callinfo.args if callinfo is not None else None
+            lp.inject(s, args)
     def postparse(self):
         try:
             self.state.requests[self.name](self.state).postparse()

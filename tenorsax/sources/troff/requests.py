@@ -21,7 +21,7 @@ class RequestImplementation(tenorsax.sources.troff.stringlike.StringNamespacedDa
     def arg_flags(self, i):
         try:
             return self._arg_flags(i)
-        except KeyError:
+        except IndexError:
             return 0
     #def long_last_arg(self):
     #    return self.flags & self.F_LONGLAST
