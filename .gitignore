@@ -1,1 +1,5 @@
 *.pyc
+*.pyo
+*.pdf
+*.fo
+*.xml
