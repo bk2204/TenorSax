@@ -245,7 +245,10 @@ class ConditionalTests(TroffToTextTestCase):
         self.tc1 = ".ie \\n(no first branch\n.el second branch\n"
         self.tc2 = ".if \\n(no \{\nbranch\n.\}\n"
         self.tc3 = ".ie \\n(no \{\nfirst branch\n.\}\n.el \{\nsecond branch\n.\}\n"
-        pass
+        self.tc4 = ".ds on text\n.if '\\*(no'\\*(on' branch\n"
+        self.tc5 = ".ds on text\n.ie '\\*(no'\\*(on' first branch\n.el second branch\n"
+        self.tc6 = ".ds on text\n.if '\\*(no'\\*(on' \{\nbranch\n.\}\n"
+        self.tc7 = ".ds on text\n.ie '\\*(no'\\*(on' \{\nfirst branch\n.\}\n.el \{\nsecond branch\n.\}\n"
     def test_short_if_false(self):
         self.assertEqual(self.t_run(".nr no 0\n" + self.tc0), "")
     def test_short_if_true(self):
@@ -270,6 +273,23 @@ class ConditionalTests(TroffToTextTestCase):
         self.assertEqual(self.t_run(".nr no 5\n" + self.tc3), "first branch\n")
     def test_long_ie_negative(self):
         self.assertEqual(self.t_run(".nr no -2\n" + self.tc3), "second branch\n")
+    def test_short_if_unequal(self):
+        self.assertEqual(self.t_run(".ds no not\n" + self.tc4), "")
+    def test_short_if_equal(self):
+        self.assertEqual(self.t_run(".ds no text\n" + self.tc4), "branch\n")
+    def test_short_ie_unequal(self):
+        self.assertEqual(self.t_run(".ds no not\n" + self.tc5), "second branch\n")
+    def test_short_ie_equal(self):
+        self.assertEqual(self.t_run(".ds no text\n" + self.tc5), "first branch\n")
+    def test_long_if_unequal(self):
+        self.assertEqual(self.t_run(".ds no not\n" + self.tc6), "")
+    def test_long_if_equal(self):
+        self.assertEqual(self.t_run(".ds no text\n" + self.tc6), "branch\n")
+    def test_long_ie_unequal(self):
+        self.assertEqual(self.t_run(".ds no not\n" + self.tc7), "second branch\n")
+    def test_long_ie_equal(self):
+        self.assertEqual(self.t_run(".ds no text\n" + self.tc7), "first branch\n")
+
 
 if __name__ == '__main__':
     unittest.main()

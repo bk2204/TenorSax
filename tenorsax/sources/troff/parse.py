@@ -509,6 +509,7 @@ class LineParser:
     def _parse_conditional(self, pstate, c):
         k = LineParserStateConstants
         negation = False
+        delay = False
         if c == "!":
             negation = True
             c = self._next_character()
@@ -549,6 +550,7 @@ class LineParser:
                     return (k.EOL, None)
                 else:
                     cur_s += c
+                delay = False
             result = strs[0] == strs[1]
             pstate = k.SEPARATOR
         log("conditional result", result)
