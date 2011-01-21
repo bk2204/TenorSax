@@ -1,0 +1,64 @@
+.do tenorsax ext 1
+.namespace d http://docbook.org/ns/docbook
+.namespace rdf http://www.w3.org/1999/02/22-rdf-syntax-ns#
+.namespace cc http://creativecommons.org/ns#
+.so roff-cleanup.tmac
+.de article
+.start d:article version=5.0
+..
+.de book
+.start d:book version=5.0
+..
+.de done
+.end
+..
+.de title
+.start d:title
+\\$1
+.end d:title
+..
+.de metadata
+.start rdf:RDF
+.start rdf:Description rdf:about=''
+..
+.de _license_if_true
+.if !'\\$1'' \\{
+.start rdf:li "rdf:resource=\\$1"
+.end rdf:li
+.\\}
+..
+.de license
+.start cc:license
+.start rdf:Alt
+._license_if_true "\\$1"
+._license_if_true "\\$2"
+._license_if_true "\\$3"
+._license_if_true "\\$4"
+._license_if_true "\\$5"
+._license_if_true "\\$6"
+._license_if_true "\\$7"
+._license_if_true "\\$8"
+._license_if_true "\\$9"
+.end rdf:Alt
+.end cc:license
+..
+.de endmetadata
+.end rdf:Description
+.end rdf:RDF
+..
+.de para
+.endpara
+.start d:para
+.nr pa 1
+..
+.de endpara
+.if \n(pa .end d:para
+.nr pa 0
+..
+.de pp
+.para
+..
+.de lp
+.para
+..
+.\" vim: set ft=groff:
