@@ -39,6 +39,8 @@ if options.stylesheet:
 elif options.fmt in ("xml", "fo"):
     ssheet = find_first("xslt", "format-" + options.fmt + ".xsl")
     f = tenorsax.filters.xslt.XSLTTransformer(writer, ssheet)
+elif options.fmt == "test":
+    f = tenorsax.filters.xslt.TextXSLTTransformer(sys.stdout, "xslt/trim.xsl")
 else:
     f = writer
 p = tenorsax.sources.troff.parse.Parser(f)
