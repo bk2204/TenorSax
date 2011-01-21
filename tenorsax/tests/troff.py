@@ -20,6 +20,10 @@ class RequestTests(TroffToTextTestCase):
         self.assertEqual(self.t_run(".rn br BR\nabc\n.br\ndef\n"), "abc def\n")
     def test_remove(self):
         self.assertEqual(self.t_run(".rm br\nabc\n.br\ndef\n"), "abc def\n")
+    def test_alias(self):
+        self.assertEqual(self.t_run(".do als BR br\nabc\n.BR\ndef\n"), "abc\ndef\n")
+    def test_alias_oldname(self):
+        self.assertEqual(self.t_run(".do als BR br\nabc\n.br\ndef\n"), "abc\ndef\n")
 
 class ExtendedModeTests(TroffToTextTestCase):
     def test_basic(self):

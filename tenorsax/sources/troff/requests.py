@@ -57,7 +57,7 @@ class RequestImpl_als(RequestImplementation):
         args = callinfo.args
         if len(args) < 2:
             return
-        self.state.requests[args[1]] = self.state.requests[args[0]]
+        self.state.requests[args[0]] = self.state.requests[args[1]]
 
 class RequestImpl_br(RequestImplementation):
     def execute(self, callinfo):
