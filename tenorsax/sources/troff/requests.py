@@ -48,6 +48,17 @@ class XMLRequestImplementation(RequestImplementation):
             uri = self.state.mapping[prefix]
         return (prefix, uri, localname, qname)
 
+class RequestImpl_als(RequestImplementation):
+    def _arg_flags(self, i):
+        return (self.F_NAME, self.F_NAME)[i]
+    def max_args(self):
+        return 2
+    def execute(self, callinfo):
+        args = callinfo.args
+        if len(args) < 2:
+            return
+        self.state.requests[args[1]] = self.state.requests[args[0]]
+
 class RequestImpl_br(RequestImplementation):
     def execute(self, callinfo):
         if callinfo.brk:
