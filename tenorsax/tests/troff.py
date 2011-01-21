@@ -8,7 +8,7 @@ import tenorsax.filters.xslt
 class TroffToTextTestCase(unittest.TestCase):
     @staticmethod
     def t_run(inp):
-        f = tenorsax.filters.xslt.TextXSLTTransformer("xslt/trim.xsl")
+        f = tenorsax.filters.xslt.TextXSLTTransformer(None, "xslt/trim.xsl")
         p = tenorsax.sources.troff.parse.Parser(f)
         p.parse(inp)
         return f.get_string()

@@ -31,10 +31,13 @@ class GenericXSLTTransformer:
         return getattr(self.writer, name)
 
 class TextXSLTTransformer(GenericXSLTTransformer):
-    def __init__(self, stylesheet):
+    def __init__(self, output, stylesheet):
         GenericXSLTTransformer.__init__(self, stylesheet)
+        self.output = output
     def endDocument(self):
         self.s = self._get_string()
+        if self.output is not None:
+            self.output.write(self.s)
     def get_string(self):
         return self.s
 
