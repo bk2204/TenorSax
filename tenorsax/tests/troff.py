@@ -16,6 +16,8 @@ class TroffToTextTestCase(unittest.TestCase):
 class RequestTests(TroffToTextTestCase):
     def test_rename(self):
         self.assertEqual(self.t_run(".rn br BR\nabc\n.BR\ndef\n"), "abc\ndef\n")
+    def test_rename_oldname(self):
+        self.assertEqual(self.t_run(".rn br BR\nabc\n.br\ndef\n"), "abc def\n")
     def test_remove(self):
         self.assertEqual(self.t_run(".rm br\nabc\n.br\ndef\n"), "abc def\n")
 

@@ -241,6 +241,7 @@ class RequestImpl_rn(RequestImplementation):
         if len(args) < 2:
             return
         self.state.requests[args[1]] = self.state.requests[args[0]]
+        del self.state.requests[args[0]]
 
 class RequestImpl_so(RequestImplementation):
     def _arg_flags(self, i):
