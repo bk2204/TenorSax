@@ -1,0 +1,6 @@
+.article
+.title "A Quick Test of TenorSax"
+.pp
+This is a quick test of TenorSax.
+.done
+.\" vim: set ft=groff:
