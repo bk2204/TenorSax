@@ -8,7 +8,31 @@ Requirements
 ------------
 
 This code requires Python 3.  lxml is required for XSLT transformations, but is
-otherwise optional.
+otherwise optional.  Note that since many output formats implicitly make use of
+XSLT transformations, lxml isn't as optional as you might like.
+
+The code is ready to run out-of-the-box.  To run the testsuite, type +make
+test+.  To generate the documentation, which requires xsltproc and fop, type
++make doc+.  The makefile uses GNU syntax.
+
+Invocation and Use
+------------------
+
+Simply run './troff'.  Output devices are selected with the +-T+ option; they
+include troff-xml (an XSL-FO like representation of the troff input), xml
+(generic XML output), fo (XSL-FO), and test (a UTF-8 representation identical to
+that used by the testsuite).  The default is troff-xml.  Macro sets are selected
+with the +-m+ option.
+
+Many of the troff requests are not implemented, so the code is not at the moment
+usable as a full troff engine.  An example set of macros is available in
+'tmac/xd.tmac' and an example document is available as 'doc/quick-test.mxd'.
+
+In general, XML output formats other than the troff-xml format and XSL-FO should
+use the xml output device.  This is true for the DocBook 5.0 output produced by
+the xd macro set.  Other macro sets generating generic XML should probably
+include 'tmac/roff-cleanup.tmac' to remove requests that would generate bizarre
+and probably corrupt XML output.
 
 Data Formats
 ------------
