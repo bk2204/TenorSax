@@ -239,5 +239,37 @@ class ExtensionTests(TroffToTextTestCase):
     def test_disable(self):
         self.assertEqual(self.t_run(self.aa + ".do tenorsax ext 1\n.do tenorsax ext 0\n.AAA\n"), "disabled\n")
 
+class ConditionalTests(TroffToTextTestCase):
+    def setUp(self):
+        self.tc0 = ".if \\n(no branch\n"
+        self.tc1 = ".ie \\n(no first branch\n.el second branch\n"
+        self.tc2 = ".if \\n(no \{\nbranch\n.\}\n"
+        self.tc3 = ".ie \\n(no \{\nfirst branch\n.\}\n.el \{\nsecond branch\n.\}\n"
+        pass
+    def test_short_if_false(self):
+        self.assertEqual(self.t_run(".nr no 0\n" + self.tc0), "")
+    def test_short_if_true(self):
+        self.assertEqual(self.t_run(".nr no 5\n" + self.tc0), "branch\n")
+    def test_short_if_negative(self):
+        self.assertEqual(self.t_run(".nr no -2\n" + self.tc0), "")
+    def test_short_ie_false(self):
+        self.assertEqual(self.t_run(".nr no 0\n" + self.tc1), "second branch\n")
+    def test_short_ie_true(self):
+        self.assertEqual(self.t_run(".nr no 5\n" + self.tc1), "first branch\n")
+    def test_short_ie_negative(self):
+        self.assertEqual(self.t_run(".nr no -2\n" + self.tc1), "second branch\n")
+    def test_long_if_false(self):
+        self.assertEqual(self.t_run(".nr no 0\n" + self.tc2), "")
+    def test_long_if_true(self):
+        self.assertEqual(self.t_run(".nr no 5\n" + self.tc2), "branch\n")
+    def test_long_if_negative(self):
+        self.assertEqual(self.t_run(".nr no -2\n" + self.tc2), "")
+    def test_long_ie_false(self):
+        self.assertEqual(self.t_run(".nr no 0\n" + self.tc3), "second branch\n")
+    def test_long_ie_true(self):
+        self.assertEqual(self.t_run(".nr no 5\n" + self.tc3), "first branch\n")
+    def test_long_ie_negative(self):
+        self.assertEqual(self.t_run(".nr no -2\n" + self.tc3), "second branch\n")
+
 if __name__ == '__main__':
     unittest.main()

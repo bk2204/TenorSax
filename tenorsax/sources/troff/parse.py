@@ -48,8 +48,14 @@ class Escape(ParseObject):
     def __init__(self, state, name):
         self.state = state
         self.name = name
+        self.text = ""
     def delay(self):
         return 0
+    def executable(self):
+        """Return True if this escape delimits a block of code."""
+        return False
+    def orig_text(self):
+        return self.text
     @staticmethod
     def _escape(c):
         if c == '"':
@@ -58,6 +64,14 @@ class Escape(ParseObject):
             return "\\\n"
         else:
             return c
+    @staticmethod
+    def _gen_name(name):
+        if len(name) == 1:
+            return name
+        elif len(name) == 2:
+            return "(" + name
+        else:
+            return "[" + name + "]"
 
 class StringEscape(Escape):
     def __init__(self, state, name):
@@ -70,6 +84,17 @@ class StringEscape(Escape):
             return s
         except Exception as e:
             return ""
+
+class ConditionalEscape(Escape):
+    def __init__(self, state, is_start):
+        self.state = state
+        self.is_start = is_start
+    def executable(self):
+        return True
+    def __str__(self):
+        return ""
+    def orig_text(self):
+        return self.state.env[0].ec + ("{" if self.is_start else "}")
 
 # FIXME: not implemented properly
 class ArgumentEscape(Escape):
@@ -102,6 +127,13 @@ class NumericEscape(Escape):
         except Exception as e:
             log(e)
             return "0"
+    def orig_text(self):
+        s = self.state.env[0].ec + "n"
+        if inc < 0:
+            s += "-"
+        elif inc > 0:
+            s += "+"
+        return s + self._gen_name(self.data)
 
 class DelayedEscape(Escape):
     def __init__(self, state, data):
@@ -111,6 +143,8 @@ class DelayedEscape(Escape):
         return 1
     def __str__(self):
         return self.data
+    def orig_text(self):
+        return self.data * 2
 
 class CharacterEscape(Escape):
     def __init__(self, state, data):
@@ -118,6 +152,8 @@ class CharacterEscape(Escape):
         self.data = data
     def __str__(self):
         return self.data
+    def orig_text(self):
+        return self.state.env[0].ec + self._gen_name(self.data)
 
 class NumericNamespacedParseObject(ParseObject):
     pass
@@ -230,6 +266,8 @@ class LineParserStateConstants:
     IN_COPYDELAY = 15
     IN_ARGDELAY = 16
     IN_QUOTEDARGDELAY = 17
+    IN_EXECUTABLE = 18
+    IN_CONDITIONAL = 19
 
 class LineParser:
     """Parses troff input line-by-line."""
@@ -269,6 +307,16 @@ class LineParser:
     def _cur_is_incremental(self):
         try:
             return self.curreq.arg_flags(len(self.items)-1) & self.curreq.F_INCREMENTAL
+        except AttributeError:
+            return False
+    def _cur_is_executable(self):
+        try:
+            return self.curreq.arg_flags(len(self.items)-1) & self.curreq.F_EXECUTABLE
+        except AttributeError:
+            return False
+    def _cur_is_conditional(self):
+        try:
+            return self.curreq.arg_flags(len(self.items)-1) & self.curreq.F_CONDITIONAL
         except AttributeError:
             return False
     def _peek_next_character(self):
@@ -444,6 +492,8 @@ class LineParser:
             # FIXME: implement correctly
             self._parse_escape_name()
             return CharacterEscape(self.state, "")
+        elif c in "{}":
+            return ConditionalEscape(self.state, c == "{")
         elif c == "$":
             try:
                 s = self._parse_escape_name()
@@ -455,6 +505,60 @@ class LineParser:
             except Exception as e:
                 pass
         return CharacterEscape(self.state, "")
+
+    def _parse_conditional(self, pstate, c):
+        k = LineParserStateConstants
+        negation = False
+        if c == "!":
+            negation = True
+            c = self._next_character()
+        if c == self.state.env[0].ec:
+            esc = self._parse_escape()
+            self.inject(esc)
+            if esc.delay():
+                delay = True
+            c = self._next_character()
+        log("condchar", c)
+        if c in "0123456789(+-":
+            (pstate, result) = self._parse_numeric(pstate, c)
+            self.items.pop()
+            result = float(result)
+        else:
+            sep = c
+            nsep = 1
+            strs = []
+            cur_s = ""
+            log("separator", sep)
+            while True:
+                c = self._next_character()
+                if c == self.state.env[0].ec:
+                    if delay:
+                        delay = False
+                    else:
+                        esc = self._parse_escape()
+                        self.inject(esc)
+                        if esc.delay:
+                            delay = True
+                if c == sep:
+                    nsep += 1
+                    strs.append(cur_s)
+                    cur_s = ""
+                    if nsep == 3:
+                        break
+                elif c == "\n":
+                    return (k.EOL, None)
+                else:
+                    cur_s += c
+            result = strs[0] == strs[1]
+            pstate = k.SEPARATOR
+        log("conditional result", result)
+        result = result > 0
+        if negation:
+            result = not result
+        log("result", result)
+        self.items.append(result)
+        return (pstate, result)
+
     def parse(self):
         env = self.state.env[0]
         ctxt = ""
@@ -463,6 +567,7 @@ class LineParser:
         kind = None
         k = LineParserStateConstants
         pstate = k.START
+        nbraces = 0
         while True:
             c = self._next_character()
             if pstate == k.EOF:
@@ -510,6 +615,8 @@ class LineParser:
                     self.items.append(ctxt)
                     ctxt = ""
                     pstate = k.EOL
+                elif self._cur_is_conditional():
+                    pstate = self._parse_conditional(pstate, c)[0]
                 elif c == env.ec:
                     esc = self._parse_escape()
                     log("sep escape is", str(esc))
@@ -517,9 +624,16 @@ class LineParser:
                     if esc.delay():
                         kind = CharacterData
                         pstate = k.IN_ARGDELAY
-                    pstate = k.IN_ARG
+                    elif esc.executable() and esc.is_start:
+                        pstate = k.IN_EXECUTABLE
+                        nbraces += 1
+                    else:
+                        pstate = k.IN_ARG
                 elif c.isspace():
                     pass
+                elif self._cur_is_executable():
+                    ctxt += c
+                    pstate = k.IN_EXECUTABLE
                 elif self._cur_is_numeric():
                     inc = self._cur_is_incremental
                     pstate = self._parse_numeric(pstate, c, inc=inc)[0]
@@ -528,6 +642,25 @@ class LineParser:
                 else:
                     log("in separator", c)
                     pstate = k.IN_ARG
+                    ctxt += c
+            elif pstate == k.IN_EXECUTABLE:
+                if c == env.ec:
+                    esc = self._parse_escape()
+                    if esc.executable():
+                        if esc.is_start:
+                            nbraces += 1
+                        else:
+                            nbraces -= 1
+                            if nbraces == 0:
+                                ctxt += "\n"
+                                pstate = k.EOL
+                    else:
+                        ctxt += esc.orig_text()
+                elif c == "\n":
+                    ctxt += "\n"
+                    if nbraces == 0:
+                        pstate = k.EOL
+                else:
                     ctxt += c
             elif pstate == k.IN_ARG or pstate == k.IN_ARGDELAY:
                 log("in arg char is", c)
@@ -617,6 +750,7 @@ class LineParser:
                 if c == "\n":
                     pstate = k.EOL
             if pstate == k.EOL:
+                log("eol ctxt", ctxt)
                 if ctxt:
                     self.items.append(ctxt)
                 ctxt = ""
@@ -724,6 +858,7 @@ class ParserState:
         self.mapping = {}
         self.filename = ""
         self.trace = 0
+        self.conditionals = []
     def _initialize_requests(self):
         for k, v in tenorsax.sources.troff.requests.__dict__.items():
             if k.startswith("RequestImpl_"):

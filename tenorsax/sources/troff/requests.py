@@ -11,6 +11,8 @@ class RequestImplementation(tenorsax.sources.troff.stringlike.StringNamespacedDa
     F_NAME = 2
     F_NUMERIC = 4
     F_INCREMENTAL = 12
+    F_CONDITIONAL = 16
+    F_EXECUTABLE = 32
     def __init__(self, state):
         tenorsax.sources.troff.stringlike.StringNamespacedData.__init__(self, state)
         self.flags = 0
@@ -96,6 +98,19 @@ class RequestImpl_ds(RequestImplementation):
             args.append("")
         self.state.requests[args[0]] = tenorsax.sources.troff.stringlike.StringData(self.state, args[1])
 
+class RequestImpl_el(RequestImplementation):
+    def _arg_flags(self, i):
+        return (self.F_EXECUTABLE,)[i]
+    def max_args(self):
+        return 1
+    def execute(self, callinfo):
+        args = callinfo.args
+        if len(args) == 0:
+            return
+        test = not self.state.conditionals.pop()
+        if test:
+            return (args[0], None)
+
 class RequestImpl_end(XMLRequestImplementation):
     def _arg_flags(self, i):
         return 0
@@ -110,6 +125,31 @@ class RequestImpl_end(XMLRequestImplementation):
             self.state.ch.endElementNS((element[1], element[2]), element[3])
         except:
             pass
+
+class RequestImpl_ie(RequestImplementation):
+    def _arg_flags(self, i):
+        return (self.F_CONDITIONAL, self.F_EXECUTABLE)[i]
+    def max_args(self):
+        return 2
+    def execute(self, callinfo):
+        args = callinfo.args
+        if len(args) == 0:
+            return
+        self.state.conditionals.append(args[0])
+        if args[0]:
+            return (args[1], None)
+
+class RequestImpl_if(RequestImplementation):
+    def _arg_flags(self, i):
+        return (self.F_CONDITIONAL, self.F_EXECUTABLE)[i]
+    def max_args(self):
+        return 2
+    def execute(self, callinfo):
+        args = callinfo.args
+        if len(args) == 0:
+            return
+        if args[0]:
+            return (args[1], None)
 
 class RequestImpl_ig(RequestImplementation):
     def _arg_flags(self, i):
