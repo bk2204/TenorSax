@@ -296,6 +296,13 @@ class ConditionalTests(TroffToTextTestCase):
     def test_long_ie_equal(self):
         self.assertEqual(self.t_run(".ds no text\n" + self.tc7), "first branch\n")
 
+class CommentTests(TroffToTextTestCase):
+    def test_default(self):
+        self.assertEqual(self.t_run("""This is\\" a comment
+some text.  This is\\# also a comment
+some more text.
+"""), "This is some text. This issome more text.\n")
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -155,6 +155,17 @@ class CharacterEscape(Escape):
     def orig_text(self):
         return self.state.env[0].ec + self._gen_name(self.data)
 
+class Comment(Escape):
+    def __init__(self, state, data):
+        self.state = state
+        self.data = data
+    def __str__(self):
+        return ""
+    def orig_text(self):
+        if self.data.endswith("\n"):
+            return self.state.env[0].ec + "#" + self.data
+        return self.state.env[0].ec + '"' + self.data
+
 class NumericNamespacedParseObject(ParseObject):
     pass
 
@@ -494,6 +505,16 @@ class LineParser:
             return CharacterEscape(self.state, "")
         elif c in "{}":
             return ConditionalEscape(self.state, c == "{")
+        elif c in '#"':
+            x = self._peek_next_character()
+            while x != "\n":
+                self._next_character()
+                s += x
+                x = self._peek_next_character()
+            if c == "#":
+                self._next_character()
+                s += x
+            return Comment(self.state, s)
         elif c == "$":
             try:
                 s = self._parse_escape_name()
