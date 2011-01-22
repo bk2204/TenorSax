@@ -279,6 +279,7 @@ class LineParserStateConstants:
     IN_QUOTEDARGDELAY = 17
     IN_EXECUTABLE = 18
     IN_CONDITIONAL = 19
+    IN_REQNAMEDELAY = 20
 
 class LineParser:
     """Parses troff input line-by-line."""
@@ -619,10 +620,18 @@ class LineParser:
                     kind = CharacterData
                     pstate = k.IN_TEXT
                     ctxt += c
-            elif pstate == k.IN_REQNAME:
+            elif pstate == k.IN_REQNAME or pstate == k.IN_REQNAMEDELAY:
                 if c == "\n":
                     self._set_request_name(name)
                     pstate = k.EOL
+                elif c == env.ec:
+                    esc = self._parse_escape()
+                    self.inject(esc)
+                    if esc.delay():
+                        kind = CharacterData
+                        pstate = k.IN_REQNAMEDELAY
+                    else:
+                        pstate = k.IN_REQNAME
                 elif c.isspace():
                     pstate = k.SEPARATOR
                     self._set_request_name(name)
