@@ -153,7 +153,7 @@ class CharacterEscape(Escape):
     def __str__(self):
         return self.data
     def orig_text(self):
-        return self.state.env[0].ec + self._gen_name(self.data)
+        return self.data
 
 class Comment(Escape):
     def __init__(self, state, data):
