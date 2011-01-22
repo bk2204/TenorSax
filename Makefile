@@ -6,6 +6,7 @@ DOCS		= quick-test manual
 ifneq ($(FANCY),)
 XSLT_STYLE	= base
 XSLT		= http://www.crustytoothpaste.net/rsrc/dct-xslt/docbook/fo/style/$(XSLT_STYLE)/cvt.xsl
+XSLT_ARGS	= --param fop1.extensions 1
 FOP_ARGS	= -c /etc/fop/fop.xconf
 else
 XSLT		= http://docbook.sourceforge.net/release/xsl-ns/current/fo/docbook.xsl
@@ -26,7 +27,7 @@ doc docs: $(patsubst %,doc/%.pdf,$(DOCS))
 	fop $(FOP_ARGS) -fo $< -pdf $@
 
 %.fo: %.xml
-	xsltproc -o $@ $(XSLT) $<
+	xsltproc $(XSLT_ARGS) -o $@ $(XSLT) $<
 
 %.xml: %.mxd
 	./troff -mxd -Txml $< > $@
