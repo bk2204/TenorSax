@@ -303,6 +303,16 @@ some text.  This is\\# also a comment
 some more text.
 """), "This is some text. This issome more text.\n")
 
+class BugTests(TroffToTextTestCase):
+    def test_quoted_escapes(self):
+        self.assertEqual(self.t_run(""".de AA
+.if !'\\\\$1'' branch
+..
+.de BB
+.AA "\\\\$1"
+..
+.BB abc def
+"""), "branch\n")
 
 if __name__ == '__main__':
     unittest.main()

@@ -713,9 +713,15 @@ class LineParser:
                     ctxt = c
                 else:
                     ctxt += c
-            elif pstate == k.IN_QUOTEDARG:
+            elif pstate == k.IN_QUOTEDARG or pstate == k.IN_QUOTEDARGDELAY:
                 if c == "\n":
                     pstate = k.EOL
+                elif c == env.ec and pstate == k.IN_QUOTEDARG:
+                    esc = self._parse_escape()
+                    self.inject(esc)
+                    if esc.delay():
+                        kind = CharacterData
+                        pstate = k.IN_QUOTEDARGDELAY
                 elif self._cur_is_long_last_arg():
                     ctxt += c
                 elif c == '"':
