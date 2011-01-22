@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import re
 import unittest
 
 import tenorsax.sources.troff.parse
@@ -28,6 +29,31 @@ class RequestTests(TroffToTextTestCase):
 class ExtendedModeTests(TroffToTextTestCase):
     def test_basic(self):
         self.assertEqual(self.t_run("abc\n.do br\ndef\n"), "abc\ndef\n")
+
+class CopyModeTests(TroffToTextTestCase):
+    def test_conditional(self):
+        text = """.de AA
+start
+..
+.de BB
+end
+..
+.de pp
+.ep
+.AA
+.nr pa 1
+..
+.de ep
+.if \\\\n(pa \\{
+.BB
+.nr pa 0
+.\\}
+..
+.pp
+.pp
+"""
+        text2 = re.sub(r"([{}])", r"\\\1", text)
+        self.assertEqual(self.t_run(text), self.t_run(text2))
 
 class StringTests(TroffToTextTestCase):
     def setUp(self):

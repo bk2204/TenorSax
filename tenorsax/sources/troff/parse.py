@@ -144,7 +144,7 @@ class DelayedEscape(Escape):
     def __str__(self):
         return self.data
     def orig_text(self):
-        return self.data * 2
+        return self.state.env[0].ec + self.data
 
 class CharacterEscape(Escape):
     def __init__(self, state, data):
@@ -480,7 +480,7 @@ class LineParser:
             self.items.append(incchar + str(val))
         return (npstate, val)
 
-    def _parse_escape(self):
+    def _parse_escape(self, copy=False):
         """Parse an escape and return it.
 
         Note that the first escape character is not passed to the function.
@@ -500,12 +500,6 @@ class LineParser:
             return NumericEscape(self.state, self._parse_escape_name(), inc)
         elif c == "\n":
             return CharacterEscape(self.state, "")
-        elif c == "f":
-            # FIXME: implement correctly
-            self._parse_escape_name()
-            return CharacterEscape(self.state, "")
-        elif c in "{}":
-            return ConditionalEscape(self.state, c == "{")
         elif c in '#"':
             x = self._peek_next_character()
             while x != "\n":
@@ -526,6 +520,16 @@ class LineParser:
                 return CharacterEscape(self.state, self.state.macroargs[-1][n])
             except Exception as e:
                 pass
+        else:
+            if copy:
+                return DelayedEscape(self.state, self.state.env[0].ec + c)
+            else:
+                if c == "f":
+                    # FIXME: implement correctly
+                    self._parse_escape_name()
+                    return CharacterEscape(self.state, "")
+                elif c in "{}":
+                    return ConditionalEscape(self.state, c == "{")
         return CharacterEscape(self.state, "")
 
     def _parse_conditional(self, pstate, c):
@@ -770,7 +774,7 @@ class LineParser:
             elif pstate == k.IN_COPY or pstate == k.IN_COPYDELAY:
                 # FIXME: Handle pecularities of copy mode
                 if c == env.ec and pstate == k.IN_COPY:
-                    esc = self._parse_escape()
+                    esc = self._parse_escape(copy=True)
                     self.inject(esc)
                     if esc.delay():
                         pstate = k.IN_COPYDELAY
