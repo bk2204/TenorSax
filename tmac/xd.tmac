@@ -5,9 +5,15 @@
 .so roff-cleanup.tmac
 .de article
 .start d:article version=5.0
+.ds type article
+..
+.de poem
+.start d:article version=5.0
+.ds type poem
 ..
 .de book
 .start d:book version=5.0
+.ds type book
 ..
 .de done
 .end
@@ -60,5 +66,11 @@
 ..
 .de lp
 .para
+..
+.de verse
+.start d:literallayout xml:space=preserve class=normal
+..
+.de endverse
+.end d:literallayout
 ..
 .\" vim: set ft=groff:
