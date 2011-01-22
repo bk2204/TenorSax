@@ -1,0 +1,17 @@
+.article
+.info
+.title "The TenorSax Manual"
+.metadata
+.license http://creativecommons.org/licenses/GPL/2.0/ http://creativecommons.org/licenses/by-sa/3.0/
+.endmetadata
+.endinfo
+.pp
+TenorSax is an XML framework designed for text processing.  It can process input
+in XML and troff formats and, with the help of macro sets, can produce
+structural or presentational output.
+.pp
+TenorSax comes with some command-line frontends, including one that resembles
+the well-known troff, but can be used practically from Python as well.  It makes
+use of the Unicode and SAX features of Python 3 to produce well-formed XML.
+.done
+.\" vim: set ft=groff:
