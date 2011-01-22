@@ -562,7 +562,7 @@ class LineParser:
                         self.inject(esc)
                         if esc.delay:
                             delay = True
-                if c == sep:
+                elif c == sep:
                     nsep += 1
                     strs.append(cur_s)
                     cur_s = ""
@@ -573,6 +573,7 @@ class LineParser:
                 else:
                     cur_s += c
                 delay = False
+            log("strings", strs[0], strs[1])
             result = strs[0] == strs[1]
             pstate = k.SEPARATOR
         log("conditional result", result)
