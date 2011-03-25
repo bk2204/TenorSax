@@ -56,6 +56,8 @@ p = tenorsax.sources.troff.parse.Parser(f)
 
 filelist = []
 for i in options.macros or []:
-    filelist.append(find_first("tmac", i))
+    val = find_first("tmac", i)
+    if val is not None:
+        filelist.append(val)
 filelist.extend(args or ["/dev/stdin"])
 p.parse(fileinput.input(files=filelist))
