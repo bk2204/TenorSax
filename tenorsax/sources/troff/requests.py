@@ -185,6 +185,10 @@ class RequestImpl_namespace(RequestImplementation):
             return
         self.state.mapping[args[0]] = args[1]
 
+class RequestImpl_nf(RequestImplementation):
+    def execute(self, callinfo):
+        self.state.env[0].fill = False
+
 class NumberRegisterRequestImplementation(RequestImplementation):
     def _arg_flags(self, i):
         return (self.F_NAME, self.F_INCREMENTAL, self.F_NUMERIC)[i]

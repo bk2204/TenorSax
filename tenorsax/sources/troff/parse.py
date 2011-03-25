@@ -16,6 +16,7 @@ class Environment:
         self.cc = '.'
         self.c2 = "'"
         self.ec = '\\'
+        self.fill = True
 
 class ParsingError(Exception):
     def __init__(self, reason):
@@ -754,7 +755,7 @@ class LineParser:
                     ctxt = c
             elif pstate == k.IN_TEXT:
                 if c == "\n":
-                    ctxt += " "
+                    ctxt += " " if env.fill else "\n"
                     pstate = k.EOL
                 elif c == env.ec:
                     esc = self._parse_escape()
@@ -766,7 +767,7 @@ class LineParser:
                     ctxt += c
             elif pstate == k.IN_TEXTDELAY:
                 if c == "\n":
-                    ctxt += "  "
+                    ctxt += " " if env.fill else "\n"
                     pstate = k.EOL
                 else:
                     ctxt += c
