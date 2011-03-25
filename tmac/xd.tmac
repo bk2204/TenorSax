@@ -18,11 +18,25 @@
 .de done
 .end
 ..
+.de author
+.start d:author
+.ie '\\$2'C' .ds _author_tag d:orgname
+.el .ds _author_tag d:personname
+.start \\*[_author_tag]
+\\$1
+.end \\*[_author_tag]
+.end d:author
+..
 .de info
 .start d:info
 ..
 .de endinfo
 .end d:info
+..
+.de au
+.info
+.author "\\$1" "\\$2"
+.endinfo
 ..
 .de title
 .start d:title
@@ -106,4 +120,5 @@
 .de endverse
 .end d:literallayout
 ..
+.als tt title
 .\" vim: set ft=groff:
