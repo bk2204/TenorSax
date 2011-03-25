@@ -898,7 +898,9 @@ class ParserState:
         self.copy_to = None
         self.macroargs = []
         self._initialize_requests()
-        self.mapping = {}
+        self.mapping = {
+                "xml": "http://www.w3.org/XML/1998/namespace"
+        }
         self.filename = ""
         self.trace = 0
         self.conditionals = []
