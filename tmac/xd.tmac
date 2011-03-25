@@ -58,6 +58,33 @@
 .end rdf:Description
 .end rdf:RDF
 ..
+.\" Takes one of B (bulleted) or N (numbered).
+.de list
+.ie '\\$1'B' .start d:itemizedlist
+.el .start d:orderedlist
+..
+.de endlist
+.enditem
+.end
+..
+.de item
+.enditem
+.start d:listitem
+.start d:para
+.ie !'\\$1'' \{
+\\$1
+.end d:para
+.end d:listitem
+.\}
+.el .nr li 1
+..
+.de enditem
+.if \\n(li \{
+.end d:para
+.end d:listitem
+.\}
+.nr li 0
+..
 .de para
 .endpara
 .start d:para
