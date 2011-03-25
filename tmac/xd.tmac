@@ -3,16 +3,21 @@
 .namespace rdf http://www.w3.org/1999/02/22-rdf-syntax-ns#
 .namespace cc http://creativecommons.org/ns#
 .so roff-cleanup.tmac
+.de _setup
+.als _nf_internal nf
+.start "d:\\$1" version=5.0
+..
 .de article
-.start d:article version=5.0
+._setup article
 .ds type article
 ..
 .de poem
-.start d:article version=5.0
+._setup article
 .ds type poem
+.als nf verse
 ..
 .de book
-.start d:book version=5.0
+._setup book
 .ds type book
 ..
 .de done
@@ -115,6 +120,7 @@
 .para
 ..
 .de verse
+._nf_internal
 .start d:literallayout xml:space=preserve class=normal
 ..
 .de endverse
