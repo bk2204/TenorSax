@@ -609,6 +609,8 @@ class LineParser:
                 elif c == "\n":
                     kind = CharacterData
                     pstate = k.EOL
+                    if not env.fill:
+                        ctxt += "\n"
                 elif c == env.cc:
                     kind = BreakingInvocable
                     pstate = k.IN_REQNAME
