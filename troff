@@ -12,9 +12,9 @@ import tenorsax.filters.xslt
 dirs = {
     "tmac": ("/usr/local/share/tenorsax/tmac", "/usr/share/tenorsax/tmac",
         "/usr/local/share/tmac", "/usr/share/tmac",
-        "/usr/share/groff/current/tmac", "./tmac"),
+        "/usr/share/groff/current/tmac", "~/share/tmac", "~/tmac", "./tmac"),
     "xslt": ("/usr/local/share/tenorsax/xslt", "/usr/share/tenorsax/xslt",
-        "./xslt")
+        "~/share/xslt", "~/xslt", "./xslt")
 }
 
 suffixes = {"tmac": (".tmac",), "xslt": (".xsl",)}
@@ -31,7 +31,7 @@ def find_first(type_, name):
         return None
     for j in suff:
         for i in lst:
-            possible = i + "/" + name + j
+            possible = os.path.expanduser(i + "/" + name + j)
             if os.path.exists(possible):
                 return possible
     return None
