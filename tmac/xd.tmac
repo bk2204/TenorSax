@@ -33,15 +33,21 @@
 .end d:author
 ..
 .de info
+.if !\\n[_in_info] \{
 .start d:info
+.nr _in_info 1
+.\}
 ..
 .de endinfo
+.if \\n[_in_info] \{
+.endmetadata
 .end d:info
+.nr _in_info 0
+.\}
 ..
 .de au
 .info
 .author "\\$1" "\\$2"
-.endinfo
 ..
 .de title
 .start d:title
@@ -49,8 +55,11 @@
 .end d:title
 ..
 .de metadata
+.info
+.if !\\n[_in_metadata] \{
 .start rdf:RDF
 .start rdf:Description rdf:about=
+.\}
 ..
 .de _license_if_true
 .if !'\\$1'' \\{
@@ -59,6 +68,7 @@
 .\\}
 ..
 .de license
+.metadata
 .start cc:license
 .start rdf:Alt
 ._license_if_true "\\$1"
@@ -74,11 +84,14 @@
 .end cc:license
 ..
 .de endmetadata
+.if \\n[_in_metadata] \{
 .end rdf:Description
 .end rdf:RDF
+.\}
 ..
 .\" Takes one of B (bulleted) or N (numbered).
 .de list
+.endinfo
 .ie '\\$1'B' .start d:itemizedlist
 .el .start d:orderedlist
 ..
@@ -105,6 +118,7 @@
 .nr li 0
 ..
 .de para
+.endinfo
 .endpara
 .start d:para
 .nr pa 1
@@ -120,6 +134,7 @@
 .para
 ..
 .de verse
+.endinfo
 ._nf_internal
 .start d:literallayout xml:space=preserve class=normal
 ..
