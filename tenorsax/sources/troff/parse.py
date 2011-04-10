@@ -754,7 +754,7 @@ class LineParser:
                 else:
                     pstate = k.SEPARATOR
                     self.items.append(ctxt)
-                    ctxt = c
+                    ctxt = c if c != " " else ""
             elif pstate == k.IN_TEXT:
                 if c == "\n":
                     ctxt += " " if env.fill else "\n"

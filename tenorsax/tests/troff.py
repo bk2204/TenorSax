@@ -387,6 +387,17 @@ class BugTests(TroffToTextTestCase):
 ..
 .BB abc def
 """), "branch\n")
+    def test_quoted_spacing(self):
+        self.assertEqual(self.t_run(""".de LU
+.ds \\\\$2 \\\\$1
+..
+.de IT
+.if !'\\\\$1'' \\\\{
+.LU "\\\\$1" ST
+.\\\\}
+..
+.IT text
+"""), "")
 
 if __name__ == '__main__':
     unittest.main()
