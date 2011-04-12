@@ -1,3 +1,4 @@
+import decimal
 import os.path
 import tenorsax.sources.troff.stringlike
 
@@ -198,8 +199,8 @@ class NumberRegisterRequestImplementation(RequestImplementation):
     def _value(klass, cur, diff):
         try:
             if diff[0] in "+-":
-                return cur + klass.func(float(diff))
-            return klass.func(float(diff))
+                return cur + klass.func(decimal.Decimal(diff))
+            return klass.func(decimal.Decimal(diff))
         except:
             return cur
     def execute(self, callinfo):
@@ -213,7 +214,7 @@ class NumberRegisterRequestImplementation(RequestImplementation):
             diff = args[1]
         try:
             if len(args) >= 3:
-                inc = self.func(float(args[2]))
+                inc = self.func(decimal.Decimal(args[2]))
         except:
             inc = 0
         curval = 0
@@ -230,7 +231,7 @@ class RequestImpl_nr(NumberRegisterRequestImplementation):
                 self._value(curval, diff), inc, "0")
 
 class RequestImpl_nrf(NumberRegisterRequestImplementation):
-    func = staticmethod(float)
+    func = staticmethod(decimal.Decimal)
     def store(self, name, curval, diff, inc):
         self.state.numregs[name] = FloatNumberRegister(self.state, name,
                 self._value(curval, diff), inc, "0")

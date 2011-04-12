@@ -1,3 +1,5 @@
+import decimal
+
 from tenorsax.sources.troff import log
 
 class NumberRegister:
@@ -16,7 +18,7 @@ class NumberRegister:
             self.decrement()
         elif inc == 1:
             self.increment()
-        return self.val
+        return str(self)
     def __call__(self, state):
         self.state = state
         return self
@@ -27,4 +29,11 @@ class IntegerNumberRegister(NumberRegister):
     func = staticmethod(int)
 
 class FloatNumberRegister(NumberRegister):
-    func = staticmethod(float)
+    func = staticmethod(decimal.Decimal)
+    def __str__(self):
+        if self.val.to_integral_value() == self.val:
+            # We have no digits after the decimal point, so add a trailing .0.
+            # We could also do this with a with statement and
+            # decimal.localcontext().
+            return str(self.val) + ".0"
+        return str(self.val)

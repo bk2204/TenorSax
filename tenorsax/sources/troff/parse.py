@@ -1,3 +1,4 @@
+import decimal
 import io
 import os
 import string
@@ -426,7 +427,7 @@ class LineParser:
                     nctxt += c
                 else:
                     try:
-                        curval = float(nctxt)
+                        curval = decimal.Decimal(nctxt)
                     except ValueError:
                         curval = 0
                     nctxt = ""
@@ -438,7 +439,7 @@ class LineParser:
             elif c in "*/%&:":
                 log("nctxt", nctxt)
                 try:
-                    curval = float(nctxt)
+                    curval = decimal.Decimal(nctxt)
                 except ValueError:
                     curval = 0
                 nctxt = ""
@@ -449,7 +450,7 @@ class LineParser:
                 op = c
             elif c in "<>=":
                 try:
-                    curval = float(nctxt)
+                    curval = decimal.Decimal(nctxt)
                 except ValueError:
                     curval = 0
                 nctxt = ""
@@ -469,7 +470,7 @@ class LineParser:
             # FIXME: this is broken
             delay = False
         try:
-            curval = float(nctxt)
+            curval = decimal.Decimal(nctxt)
         except:
             curval = 0
         stk.append(curval)
@@ -550,7 +551,7 @@ class LineParser:
         if c in "0123456789(+-":
             (pstate, result) = self._parse_numeric(pstate, c)
             self.items.pop()
-            result = float(result)
+            result = decimal.Decimal(result)
         else:
             sep = c
             nsep = 1
