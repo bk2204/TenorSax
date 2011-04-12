@@ -3,6 +3,7 @@
 .namespace rdf http://www.w3.org/1999/02/22-rdf-syntax-ns#
 .namespace cc http://creativecommons.org/ns#
 .so roff-cleanup.tmac
+.so licenses.tmac
 .de _setup
 .als _nf_internal nf
 .start "d:\\$1" version=5.0
@@ -63,8 +64,11 @@
 ..
 .de _license_if_true
 .if !'\\$1'' \\{
-.start rdf:li "rdf:resource=\\$1"
-.end rdf:li
+._license_to_url "\\$1" _license_url
+.\"
+.\"\\*[_license_url]
+.\".start rdf:li "rdf:resource=\\*[_license_url]"
+.\".end rdf:li
 .\\}
 ..
 .de license
