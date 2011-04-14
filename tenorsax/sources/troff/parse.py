@@ -56,8 +56,6 @@ class Escape(ParseObject):
     def executable(self):
         """Return True if this escape delimits a block of code."""
         return False
-    def orig_text(self):
-        return self.text
     @staticmethod
     def _escape(c):
         if c == '"':
@@ -87,8 +85,6 @@ class StringEscape(Escape):
             return s
         except Exception as e:
             return ""
-    def orig_text(self):
-        return self.state.env[0].ec + "*" + Escape._gen_name(self.name)
 
 class ConditionalEscape(Escape):
     def __init__(self, state, is_start):
@@ -98,8 +94,6 @@ class ConditionalEscape(Escape):
         return True
     def __str__(self):
         return ""
-    def orig_text(self):
-        return self.state.env[0].ec + ("{" if self.is_start else "}")
 
 # FIXME: not implemented properly
 class ArgumentEscape(Escape):
@@ -132,13 +126,6 @@ class NumericEscape(Escape):
         except Exception as e:
             log(e)
             return "0"
-    def orig_text(self):
-        s = self.state.env[0].ec + "n"
-        if inc < 0:
-            s += "-"
-        elif inc > 0:
-            s += "+"
-        return s + self._gen_name(self.data)
 
 class DelayedEscape(Escape):
     def __init__(self, state, data):
@@ -148,16 +135,12 @@ class DelayedEscape(Escape):
         return 1
     def __str__(self):
         return self.data
-    def orig_text(self):
-        return self.state.env[0].ec + self.data
 
 class CharacterEscape(Escape):
     def __init__(self, state, data):
         self.state = state
         self.data = data
     def __str__(self):
-        return self.data
-    def orig_text(self):
         return self.data
 
 class Comment(Escape):
@@ -166,10 +149,6 @@ class Comment(Escape):
         self.data = data
     def __str__(self):
         return ""
-    def orig_text(self):
-        if self.data.endswith("\n"):
-            return self.state.env[0].ec + "#" + self.data
-        return self.state.env[0].ec + '"' + self.data
 
 class NumericNamespacedParseObject(ParseObject):
     pass
@@ -485,6 +464,27 @@ class LineParser:
             self.items.append(incchar + str(val))
         return (npstate, val)
 
+    def _parse_escape_and_copy_text(self, copy=False):
+        """Parse an escape and return it and all its component characters.
+
+        This function works just like _parse_escape (and in fact calls it), with
+        the exception that it returns a 2-tuple, the first being the escape
+        object and the second being the text that makes up the complete escape,
+        including the original escape character (which is not passed to the
+        function).
+        """
+        nc = self._next_character
+        text = self.state.env[0].ec
+        def func(text):
+            c = nc()
+            text += c
+            return c
+        self._next_character = lambda: func(text)
+        try:
+            esc = self._parse_escape(copy)
+        finally:
+            self._next_character = nc
+        return (esc, text)
     def _parse_escape(self, copy=False):
         """Parse an escape and return it.
 
@@ -689,7 +689,7 @@ class LineParser:
                     ctxt += c
             elif pstate == k.IN_EXECUTABLE:
                 if c == env.ec:
-                    esc = self._parse_escape()
+                    (esc, text) = self._parse_escape_and_copy_text()
                     if esc.executable():
                         if esc.is_start:
                             nbraces += 1
@@ -699,7 +699,7 @@ class LineParser:
                                 ctxt += "\n"
                                 pstate = k.EOL
                     else:
-                        ctxt += esc.orig_text()
+                        ctxt += text
                 elif c == "\n":
                     ctxt += "\n"
                     if nbraces == 0:
