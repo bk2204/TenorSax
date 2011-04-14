@@ -77,6 +77,7 @@ class Escape(ParseObject):
 
 class StringEscape(Escape):
     def __init__(self, state, name):
+        super().__init__(state, name)
         self.state = state
         self.name = name
     def __str__(self):
@@ -86,6 +87,8 @@ class StringEscape(Escape):
             return s
         except Exception as e:
             return ""
+    def orig_text(self):
+        return self.state.env[0].ec + "*" + Escape._gen_name(self.name)
 
 class ConditionalEscape(Escape):
     def __init__(self, state, is_start):
