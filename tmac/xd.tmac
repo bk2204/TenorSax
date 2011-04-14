@@ -65,10 +65,8 @@
 .de _license_if_true
 .if !'\\$1'' \\{
 ._license_to_url "\\$1" _license_url
-.\"
-.\"\\*[_license_url]
-.\".start rdf:li "rdf:resource=\\*[_license_url]"
-.\".end rdf:li
+.start rdf:li "rdf:resource=\\*[_license_url]"
+.end rdf:li
 .\\}
 ..
 .de license
