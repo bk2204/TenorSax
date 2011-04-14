@@ -9,6 +9,15 @@ import xml.sax.saxutils
 import tenorsax.sources.troff.parse
 import tenorsax.filters.xslt
 
+try:
+    from lxml.etree import XSLTApplyError
+except:
+    XSLTApplyError = None
+
+def print_error(msg, device, exception):
+    print("E: {0} for output device '{1}' gave error: {2}".format(msg, device,
+        exception), file=sys.stderr)
+
 dirs = {
     "tmac": ("/usr/local/share/tenorsax/tmac", "/usr/share/tenorsax/tmac",
         "/usr/local/share/tmac", "/usr/share/tmac",
@@ -60,4 +69,7 @@ for i in options.macros or []:
     if val is not None:
         filelist.append(val)
 filelist.extend(args or ["/dev/stdin"])
-p.parse(fileinput.input(files=filelist))
+try:
+    p.parse(fileinput.input(files=filelist))
+except XSLTApplyError as e:
+    print_error("transforming XML", options.fmt, e)
