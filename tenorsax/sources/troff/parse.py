@@ -325,6 +325,7 @@ class LineParser:
         if len(self.chartrap) != 0:
             self.chartrap[-1] -= 1
             if self.chartrap[-1] == 0:
+                log("chartrap", len(self.chartrap), "sprung")
                 self.chartrap.pop()
                 self.state.macroargs.pop()
         return c
@@ -334,7 +335,10 @@ class LineParser:
         if args is not None:
             self.chartrap.append(len(s))
             self.state.macroargs.append(args)
+            log("inserting trap", len(self.chartrap), "for", len(s))
+            log("trap", len(self.chartrap), "is", len(args), args)
         elif len(self.chartrap) != 0:
+            log("expanding trap", len(self.chartrap), "by", len(s))
             self.chartrap[-1] += len(s)
     def _parse_escape_name(self):
         s = ""
