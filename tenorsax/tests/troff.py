@@ -398,6 +398,23 @@ class BugTests(TroffToTextTestCase):
 ..
 .IT text
 """), "")
+    def test_conditional_argument_expansion(self):
+        self.assertEqual(self.t_run(""".de PR
+\\\\$1
+\\\\$2
+\\\\$3
+.br
+..
+.de SE
+.ie ''\\\\$2' .PR "d\\\\$1" alone
+.el .PR "d\\\\$1" with "ch\\\\$2"
+..
+.de PO
+.SE ip "\\\\$1"
+..
+.PO
+.PO eese
+"""), "dip alone\ndip with cheese\n")
 
 if __name__ == '__main__':
     unittest.main()

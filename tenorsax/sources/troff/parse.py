@@ -264,6 +264,7 @@ class LineParserStateConstants:
     IN_EXECUTABLE = 18
     IN_CONDITIONAL = 19
     IN_REQNAMEDELAY = 20
+    IN_EXECUTABLEDELAY = 21
 
 class LineParser:
     """Parses troff input line-by-line."""
@@ -468,27 +469,6 @@ class LineParser:
             self.items.append(incchar + str(val))
         return (npstate, val)
 
-    def _parse_escape_and_copy_text(self, copy=False):
-        """Parse an escape and return it and all its component characters.
-
-        This function works just like _parse_escape (and in fact calls it), with
-        the exception that it returns a 2-tuple, the first being the escape
-        object and the second being the text that makes up the complete escape,
-        including the original escape character (which is not passed to the
-        function).
-        """
-        nc = self._next_character
-        text = self.state.env[0].ec
-        def func(text):
-            c = nc()
-            text += c
-            return c
-        self._next_character = lambda: func(text)
-        try:
-            esc = self._parse_escape(copy)
-        finally:
-            self._next_character = nc
-        return (esc, text)
     def _parse_escape(self, copy=False):
         """Parse an escape and return it.
 
@@ -691,9 +671,10 @@ class LineParser:
                     log("in separator", c)
                     pstate = k.IN_ARG
                     ctxt += c
-            elif pstate == k.IN_EXECUTABLE:
-                if c == env.ec:
-                    (esc, text) = self._parse_escape_and_copy_text()
+            elif pstate == k.IN_EXECUTABLE or pstate == k.IN_EXECUTABLEDELAY:
+                if c == env.ec and pstate == k.IN_EXECUTABLE:
+                    esc = self._parse_escape()
+                    log("in executable", esc)
                     if esc.executable():
                         if esc.is_start:
                             nbraces += 1
@@ -703,12 +684,14 @@ class LineParser:
                                 ctxt += "\n"
                                 pstate = k.EOL
                     else:
-                        ctxt += text
+                        self.inject(esc)
+                        pstate = k.IN_EXECUTABLEDELAY
                 elif c == "\n":
                     ctxt += "\n"
                     if nbraces == 0:
                         pstate = k.EOL
                 else:
+                    pstate = k.IN_EXECUTABLE
                     ctxt += c
             elif pstate == k.IN_ARG or pstate == k.IN_ARGDELAY:
                 log("in arg char is", c)
