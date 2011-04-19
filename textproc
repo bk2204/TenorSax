@@ -1,0 +1,68 @@
+#!/usr/bin/python3
+
+import fileinput
+import optparse
+import os.path
+import sys
+import xml.sax.saxutils
+
+import tenorsax.sources.asciidoc.parse
+import tenorsax.filters.xslt
+
+try:
+    from lxml.etree import XSLTApplyError
+except:
+    XSLTApplyError = None
+
+def print_error(msg, device, exception):
+    print("E: {0} for output device '{1}' gave error: {2}".format(msg, device,
+        exception), file=sys.stderr)
+
+dirs = {
+    "xslt": ("/usr/local/share/tenorsax/xslt", "/usr/share/tenorsax/xslt",
+        "~/share/xslt", "~/xslt", "./xslt")
+}
+
+suffixes = {"tmac": (".tmac",), "xslt": (".xsl",)}
+
+def find_first(type_, name):
+    try:
+        lst = dirs[type_]
+    except KeyError:
+        return None
+    try:
+        suff = list(suffixes[type_])
+        suff.append("")
+    except KeyError:
+        return None
+    for j in suff:
+        for i in lst:
+            possible = os.path.expanduser(i + "/" + name + j)
+            if os.path.exists(possible):
+                return possible
+    return None
+
+
+parser = optparse.OptionParser()
+parser.add_option("-T", dest="fmt", default="troff-xml")
+parser.add_option("-s", dest="stylesheet")
+(options, args) = parser.parse_args()
+
+writer = xml.sax.saxutils.XMLGenerator(encoding="UTF-8")
+if options.stylesheet:
+    f = tenorsax.filters.xslt.XSLTTransformer(writer, options.stylesheet)
+elif options.fmt in ("xml", "fo"):
+    ssheet = find_first("xslt", "format-" + options.fmt)
+    f = tenorsax.filters.xslt.XSLTTransformer(writer, ssheet)
+elif options.fmt == "test":
+    f = tenorsax.filters.xslt.TextXSLTTransformer(sys.stdout, "xslt/trim.xsl")
+else:
+    f = writer
+p = tenorsax.sources.asciidoc.parse.AsciiDocParser(f)
+
+filelist = []
+filelist.extend(args or ["/dev/stdin"])
+try:
+    p.parse(fileinput.input(files=filelist))
+except XSLTApplyError as e:
+    print_error("transforming XML", options.fmt, e)
