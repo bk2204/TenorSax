@@ -6,19 +6,20 @@
 .so licenses.tmac
 .de _setup
 .als _nf_internal nf
-.start "d:\\$1" version=5.0
+.ie ''\\$2' .start "d:\\$1" version=5.0
+.el .start "d:\\$1" version=5.0 "xml:lang=\\$2"
 ..
 .de article
-._setup article
+._setup article "\\$2"
 .ds type article
 ..
 .de poem
-._setup article
+._setup article "\\$2"
 .ds type poem
 .als nf verse
 ..
 .de book
-._setup book
+._setup book "\\$2"
 .ds type book
 ..
 .de done
