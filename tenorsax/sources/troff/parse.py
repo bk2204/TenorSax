@@ -10,7 +10,7 @@ from xml.sax.xmlreader import AttributesNSImpl as Attributes
 import tenorsax.sources.troff.requests
 import tenorsax.sources.troff.stringlike
 
-from tenorsax.sources.troff import *
+from tenorsax.util import *
 
 class Environment:
     def __init__(self):

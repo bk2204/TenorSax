@@ -1,6 +1,6 @@
 import decimal
 
-from tenorsax.sources.troff import log
+from tenorsax.util import log
 
 class NumberRegister:
     def __init__(self, state, name, val, increment, fmt):

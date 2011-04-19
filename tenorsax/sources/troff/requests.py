@@ -4,7 +4,7 @@ import tenorsax.sources.troff.stringlike
 
 from xml.sax.xmlreader import AttributesNSImpl as Attributes
 
-from tenorsax.sources.troff import log
+from tenorsax.util import log
 from tenorsax.sources.troff.numeric import IntegerNumberRegister, FloatNumberRegister
 
 class RequestImplementation(tenorsax.sources.troff.stringlike.StringNamespacedData):
