@@ -46,13 +46,15 @@ def find_first(type_, name):
 parser = optparse.OptionParser()
 parser.add_option("-T", dest="fmt", default="xml")
 parser.add_option("-s", dest="stylesheet")
+parser.add_option("-o", dest="outfile")
 (options, args) = parser.parse_args()
 
-writer = xml.sax.saxutils.XMLGenerator(encoding="UTF-8")
+fp = open(options.outfile) if options.outfile else sys.stdout
+writer = xml.sax.saxutils.XMLGenerator(out=fp, encoding="UTF-8")
 if options.stylesheet:
     f = tenorsax.filters.xslt.XSLTTransformer(writer, options.stylesheet)
 elif options.fmt == "test":
-    f = tenorsax.filters.xslt.TextXSLTTransformer(sys.stdout, "xslt/trim.xsl")
+    f = tenorsax.filters.xslt.TextXSLTTransformer(fp, "xslt/trim.xsl")
 elif options.fmt == "test-xml":
     f = writer
 else:
