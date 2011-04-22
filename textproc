@@ -44,20 +44,20 @@ def find_first(type_, name):
 
 
 parser = optparse.OptionParser()
-parser.add_option("-T", dest="fmt", default="troff-xml")
+parser.add_option("-T", dest="fmt", default="xml")
 parser.add_option("-s", dest="stylesheet")
 (options, args) = parser.parse_args()
 
 writer = xml.sax.saxutils.XMLGenerator(encoding="UTF-8")
 if options.stylesheet:
     f = tenorsax.filters.xslt.XSLTTransformer(writer, options.stylesheet)
-elif options.fmt in ("xml", "fo"):
-    ssheet = find_first("xslt", "format-" + options.fmt)
-    f = tenorsax.filters.xslt.XSLTTransformer(writer, ssheet)
 elif options.fmt == "test":
     f = tenorsax.filters.xslt.TextXSLTTransformer(sys.stdout, "xslt/trim.xsl")
-else:
+elif options.fmt == "test-xml":
     f = writer
+else:
+    ssheet = find_first("xslt", "format-" + options.fmt)
+    f = tenorsax.filters.xslt.XSLTTransformer(writer, ssheet)
 p = tenorsax.sources.asciidoc.parse.AsciiDocParser(f)
 
 filelist = []
