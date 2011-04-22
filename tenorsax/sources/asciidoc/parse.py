@@ -28,8 +28,38 @@ class AsciiDocParser(xml.sax.xmlreader.XMLReader):
         self.state = AsciiDocStateConstants.START
         self.level = 0
         self.data = []
+        self.inlines = []
+    @staticmethod
+    def _inline_tag(start, end):
+        tagmap = {
+            "'": "emphasis",
+            "_": "emphasis",
+            "*": "strong",
+            "+": "monospace",
+            "`": "monospace",
+            "#": "null"
+        }
+        if start != end:
+            raise NotImplementedError
+        return tagmap[start]
     def _process_text(self, text):
-        self.ch.characters(text)
+        # FIXME: this does not handle pairs where the starting and ending marks
+        # are not identical.  It also doesn't handle single quotation marks
+        # because of contractions.
+        pat = re.compile(r"(^|[^\\*+`#]*)([*+`#])([^*+`#]*)")
+        mlst = pat.findall(text)
+        for prev, mark, txt in mlst:
+            self.ch.characters(prev)
+            tag = self._inline_tag(mark, mark)
+            if len(self.inlines) and self.inlines[-1][1] == mark:
+                inline = self.inlines.pop()
+                self._end_element("inline")
+            else:
+                self.inlines.append((tag, mark))
+                self._start_element("inline", {"type": tag})
+            self.ch.characters(txt)
+        if len(mlst) == 0:
+            self.ch.characters(text)
     def _handle_line(self, line):
         TITLE_CHARS = "=-~^+"
         k = AsciiDocStateConstants
@@ -92,6 +122,9 @@ class AsciiDocParser(xml.sax.xmlreader.XMLReader):
     def _flush(self):
         self._flush_text()
         if self.state == AsciiDocStateConstants.IN_PARA:
+            while len(self.inlines):
+                self._end_element("inline")
+                self.inlines.pop()
             self._end_element("para")
             self.state = AsciiDocStateConstants.PARA_START
         self.ch.ignorableWhitespace("\n")
@@ -143,9 +176,21 @@ class AsciiDocParser(xml.sax.xmlreader.XMLReader):
                     self._process_text(title)
                 self._end_element("title")
     def _start_element(self, name, attrs = {}):
-        if attrs:
-            raise NotImplementedError
-        self.ch.startElementNS((self.NS, name), self.PREFIX + ":" + name, attrs)
+        if len(attrs):
+            # Each item has (ns, localname, qname, value).
+            attritems = {}
+            qnameitems = {}
+            for ak, av in attrs.items():
+                if type(ak) is list or type(ak) is tuple:
+                    attritems[(ak[0], ak[1])] = av
+                    qnameitems[ak[2]] = av
+                else:
+                    attritems[(None, ak)] = av
+                    qnameitems[ak] = av
+            a = xml.sax.xmlreader.AttributesNSImpl(attritems, qnameitems)
+        else:
+            a = xml.sax.xmlreader.AttributesNSImpl({}, {})
+        self.ch.startElementNS((self.NS, name), self.PREFIX + ":" + name, a)
     def _end_element(self, name):
         self.ch.endElementNS((self.NS, name), self.PREFIX + ":" + name)
     def parse(self, source):
