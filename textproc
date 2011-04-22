@@ -23,7 +23,7 @@ dirs = {
         "~/share/xslt", "~/xslt", "./xslt")
 }
 
-suffixes = {"tmac": (".tmac",), "xslt": (".xsl",)}
+suffixes = {"xslt": (".xsl",)}
 
 def find_first(type_, name):
     try:
