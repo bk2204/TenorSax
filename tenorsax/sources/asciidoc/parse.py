@@ -8,6 +8,9 @@ def chomp(line):
         return line[:-1]
     return line
 
+class AsciiDocStateError(Exception):
+    pass
+
 class AsciiDocStateConstants:
     START = 0
     TEXT_LINE = 1
@@ -30,6 +33,9 @@ class AsciiDocParser(xml.sax.xmlreader.XMLReader):
     def _handle_line(self, line):
         TITLE_CHARS = "=-~^+"
         k = AsciiDocStateConstants
+        # A single line comment, not a comment block.
+        if line.startswith("//") and line[2] != "/":
+            return
         if self.state == k.START:
             if line[0] == "[":
                 raise NotImplementedError
@@ -51,8 +57,8 @@ class AsciiDocParser(xml.sax.xmlreader.XMLReader):
                 log("start of line is title char", line[0])
                 prev_line = self.data.pop()
                 l = len(prev_line)
-                pat = r"{0}{1}{3},{4}{2}$".format(line[0], "{", "}", l - 2,
-                        l + 2)
+                pat = r"{0}{1}{3},{4}{2}$".format("\\" + line[0], "{", "}",
+                        l - 2, l + 2)
                 m = re.match(pat, line)
                 if m is None:
                     self._process_text(prev_line)
@@ -60,16 +66,16 @@ class AsciiDocParser(xml.sax.xmlreader.XMLReader):
                 else:
                     self._start_section(TITLE_CHARS.index(line[0]), prev_line,
                             line)
-                self.state = k.TEXT_LINE
             elif re.match("^\s*$", line):
+                if self.state == k.IN_PARA:
+                    self._flush()
                 self.state = k.PARA_START
             else:
                 if len(self.data):
                     self._process_text(self.data.pop())
                 self.data.append(line)
         elif self.state == k.PARA_START:
-            while len(self.data):
-                self._process_text(self.data.pop())
+            self._flush()
             if line[0] == "[":
                 raise NotImplementedError
             elif re.match("^\s*$", line):
@@ -80,19 +86,25 @@ class AsciiDocParser(xml.sax.xmlreader.XMLReader):
             self.state = k.IN_PARA
         else:
             raise NotImplementedError
-    def _flush(self):
+    def _flush_text(self):
         while len(self.data):
             self._process_text(self.data.pop())
+    def _flush(self):
+        self._flush_text()
         if self.state == AsciiDocStateConstants.IN_PARA:
             self._end_element("para")
+            self.state = AsciiDocStateConstants.PARA_START
         self.ch.ignorableWhitespace("\n")
     def _start_para(self, type_ = None):
+        if self.state == AsciiDocStateConstants.IN_PARA:
+            raise AsciiDocStateError("Only one para at a time, please")
         self.ch.ignorableWhitespace("\n")
         self._start_element("para")
+        log("start_para: state is", self.state)
     def _start_section(self, level, title, line = None):
         title = chomp(title)
         if self.state == AsciiDocStateConstants.IN_PARA:
-            self._end_element("para")
+            self._flush()
         if level == 0:
             if self.level == 0:
                 # Don't create a new element here because we already have a root
@@ -143,6 +155,9 @@ class AsciiDocParser(xml.sax.xmlreader.XMLReader):
         for line in source:
             self._handle_line(line)
         self._flush()
+        while self.level > 0:
+            self._end_element("section")
+            self.level -= 1
         self._end_element("root")
         self.ch.endPrefixMapping(self.PREFIX)
         self.ch.endDocument()
