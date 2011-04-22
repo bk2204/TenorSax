@@ -129,6 +129,7 @@ class AsciiDocParser(xml.sax.xmlreader.XMLReader):
             while level < self.level:
                 self._end_element("section")
                 self.level -= 1
+            self._end_element("section")
             self._start_element("section")
             self._start_element("title")
             self._process_text(title)
