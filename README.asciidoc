@@ -1,8 +1,8 @@
 TenorSax
 ========
 
-TenorSax is a tool to turn plain text formats such as troff into an XML stream
-and optionally transform the output.
+TenorSax is a tool to turn plain text formats such as troff and AsciiDoc into an
+XML stream and optionally transform the output.
 
 Requirements
 ------------
@@ -17,6 +17,9 @@ test+.  To generate the documentation, which requires xsltproc and fop, type
 
 Invocation and Use
 ------------------
+
+troff
+~~~~~
 
 Simply run +./troff+.  Output devices are selected with the +-T+ option; they
 include troff-xml (an XSL-FO like representation of the troff input), xml
@@ -34,10 +37,32 @@ the xd macro set.  Other macro sets generating generic XML should probably
 include +tmac/roff-cleanup.tmac+ to remove requests that would generate bizarre
 and probably corrupt XML output.
 
+AsciiDoc
+~~~~~~~~
+
+Run +./textproc+.  Output devices are selected with the +-T+ option; they
+include xml (the default), fo (for XSL-FO), and db5 (for DocBook 5).  The xml
+output produces XML in the +http://ns.crustytoothpaste.net/text-markup+
+namespace.  Other output devices consist of an XSLT stylesheet that converts XML
+in this namespace to the appropriate format.
+
 Data Formats
 ------------
 
-Currently, only troff is available as input.
+Input
+~~~~~
+
+troff and AsciiDoc are available as input.
+
+Output
+~~~~~~
+
+Output options depend on the input tool.  The troff input tool generally uses
+macro sets which produce some sort of XML output.  Formats that use the textproc
+input tool can support any type of output that can be produced using an XSLT
+stylesheet.  Any input format for the textproc input tool will generate output
+in the text-markup namespace and therefore any stylesheet which can process this
+format will work with any of those input formats.
 
 License
 -------
