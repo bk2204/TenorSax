@@ -174,7 +174,7 @@ class AsciiDocParser(xml.sax.xmlreader.XMLReader):
                 m = re.match(r"(={1,5})\s+(.*\S*)\s+\1\s*$", line)
                 if m is None:
                     self.state = k.TEXT_LINE
-                    self._process_text(line)
+                    self.data.append(line)
                 else:
                     l = len(m.group(1))
                     self._start_section(l, m.group(2))
@@ -192,7 +192,7 @@ class AsciiDocParser(xml.sax.xmlreader.XMLReader):
                         l - 2, l + 2)
                 m = re.match(pat, line)
                 if m is None:
-                    self._process_text(prev_line)
+                    self.data.append(prev_line)
                     self.data.append(line)
                 else:
                     self._start_section(TITLE_CHARS.index(line[0]), prev_line,
@@ -202,8 +202,6 @@ class AsciiDocParser(xml.sax.xmlreader.XMLReader):
                     self._flush()
                 self.state = k.PARA_START
             else:
-                if len(self.data):
-                    self._process_text(self.data.pop())
                 self.data.append(line)
         elif self.state == k.PARA_START:
             self._flush()
@@ -218,8 +216,8 @@ class AsciiDocParser(xml.sax.xmlreader.XMLReader):
         else:
             raise NotImplementedError
     def _flush_text(self):
-        while len(self.data):
-            self._process_text(self.data.pop())
+        self._process_text(''.join(self.data))
+        self.data = []
     def _flush(self):
         self._flush_text()
         if self.state == AsciiDocStateConstants.IN_PARA:
