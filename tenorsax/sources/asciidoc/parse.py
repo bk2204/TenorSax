@@ -57,19 +57,6 @@ class AsciiDocParser(xml.sax.xmlreader.XMLReader):
         self.data = []
         self.inlines = []
     @staticmethod
-    def _inline_tag(start, end):
-        tagmap = {
-            "'": "emphasis",
-            "_": "emphasis",
-            "*": "strong",
-            "+": "monospace",
-            "`": "monospace",
-            "#": "null"
-        }
-        if start != end:
-            raise NotImplementedError
-        return tagmap[start]
-    @staticmethod
     def _process_quotes(text):
         """Process any quotes in this text and replace them with tags."""
         tags = [
