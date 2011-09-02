@@ -1,5 +1,6 @@
 #-
 # Copyright © 2011 brian m. carlson
+# Copyright © 2002-2010 Stuart Rackham
 # 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -13,6 +14,9 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+#-
+# Part of the parser in this file has been taken from AsciiDoc 8.6.5.
 
 import re
 import xml.sax.xmlreader
@@ -32,6 +36,13 @@ class AsciiDocStateConstants:
     TEXT_LINE = 1
     PARA_START = 2
     IN_PARA = 3
+
+class Quote:
+    def __init__(self, lq, rq, tag, unconstrained=False):
+        self.lq = lq
+        self.rq = rq
+        self.tag = tag
+        self.simple = not unconstrained
 
 class AsciiDocParser(xml.sax.xmlreader.XMLReader):
     NS = "http://ns.crustytoothpaste.net/text-markup"
@@ -58,24 +69,98 @@ class AsciiDocParser(xml.sax.xmlreader.XMLReader):
         if start != end:
             raise NotImplementedError
         return tagmap[start]
-    def _process_text(self, text):
-        # FIXME: this does not handle pairs where the starting and ending marks
-        # are not identical.  It also doesn't handle single quotation marks
-        # because of contractions.
-        pat = re.compile(r"(^|[^\\*+`#]*)([*+`#])([^*+`#]*)")
-        mlst = pat.findall(text)
-        for prev, mark, txt in mlst:
-            self.ch.characters(prev)
-            tag = self._inline_tag(mark, mark)
-            if len(self.inlines) and self.inlines[-1][1] == mark:
-                inline = self.inlines.pop()
-                self._end_element("inline")
+    @staticmethod
+    def _process_quotes(text):
+        """Process any quotes in this text and replace them with tags."""
+        tags = [
+            Quote("**", "**", "strong", True),
+            Quote("*", "*", "strong"),
+            Quote("``", "''", "quote"),
+            Quote("'", "'", "emphasis"),
+            Quote("`", "'", "quote"),
+            Quote("+++", "+++", "span", True),
+            Quote("$$", "$$", "span", True),
+            Quote("++", "++", "monospace", True),
+            Quote("+", "+", "monospace"),
+            Quote("__", "__", "emphasis", True),
+            Quote("_", "_", "emphasis"),
+            Quote("##", "##", "span", True),
+            Quote("#", "#", "span"),
+            Quote("^", "^", "superscript", True),
+            Quote("~", "~", "subscript", True)
+        ]
+        for q in tags:
+            lq = q.lq
+            rq = q.rq
+            tag = q.tag
+            if not q.simple:
+                # Unconstrained quotes can appear anywhere.
+                reo = re.compile(r'(?msu)(^|.)(\[(?P<attrlist>[^[\]]+?)\])?' +
+                        r'(?:' + re.escape(lq) + r')' +
+                        r'(?P<content>.+?)(?:'+re.escape(rq)+r')')
             else:
-                self.inlines.append((tag, mark))
-                self._start_element("inline", {"type": tag})
-            self.ch.characters(txt)
-        if len(mlst) == 0:
-            self.ch.characters(text)
+                # The text within constrained quotes must be bounded by white
+                # space.  Non-word (\W) characters are allowed at boundaries to
+                # accomodate enveloping quotes and punctuation e.g. a='x',
+                # ('x'), 'x', ['x'].
+                reo = re.compile(r'(?msu)(^|[^\w;:}])' +
+                    r'(\[(?P<attrlist>[^[\]]+?)\])?' +
+                    r'(?:' + re.escape(lq) + r')' +
+                    r'(?P<content>\S|\S.*?\S)(?:'+re.escape(rq)+r')(?=\W|$)')
+            pos = 0
+            while True:
+                mo = reo.search(text, pos)
+                if not mo:
+                    break
+                if text[mo.start()] == '\\':
+                    # Delete leading backslash.
+                    text = text[:mo.start()] + text[mo.start()+1:]
+                    # Skip past start of match.
+                    pos = mo.start() + 1
+                else:
+                    attrlist = {}
+                    #parse_attributes(mo.group('attrlist'), attrlist)
+                    stag = ''.join(["<i-", tag, ">"])
+                    etag = ''.join(["</i-", tag, ">"])
+                    s = mo.group(1) + stag + mo.group('content') + etag
+                    text = text[:mo.start()] + s + text[mo.end():]
+                    pos = mo.start() + len(s)
+        return text
+    def _process_tags(self, text):
+        """Emits a tagged text to the ContentHandler."""
+        reo = re.compile(r"<(/?)(\w)-([^/>]+)(/?)>")
+        pos = 0
+        while True:
+            mo = reo.search(text, pos)
+            if not mo:
+                break
+            is_end = mo.group(1) == "/"
+            tagtype = mo.group(2)
+            tagname = mo.group(3)
+            is_sc = mo.group(4) == "/"
+            self.ch.characters(text[pos:mo.start()])
+            if tagtype == "c":
+                self.ch.characters(chr(int(tagname[1:], 16)))
+            elif tagtype in "i":
+                if not is_sc and not is_end:
+                    self._start_element("inline", {"type": tagname})
+                elif not is_sc:
+                    self._end_element("inline")
+            pos = mo.end()
+        self.ch.characters(text[pos:])
+    @staticmethod
+    def _preprocess_for_tagging(text):
+        """Converts angle brackets into tags."""
+        def repl(mo):
+            if mo.group(0) == "<":
+                return "<c-u003c/>"
+            else:
+                return "<c-u003e/>"
+        return re.sub(r"[<>]", repl, text)
+    def _process_text(self, text):
+        text = self._preprocess_for_tagging(text)
+        text = self._process_quotes(text)
+        self._process_tags(text)
     def _handle_line(self, line):
         TITLE_CHARS = "=-~^+"
         k = AsciiDocStateConstants
