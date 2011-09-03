@@ -22,7 +22,7 @@ import re
 import xml.sax.xmlreader
 
 from tenorsax.util import *
-from tenorsax.sources import Quote, QuoteParser
+from tenorsax.sources import FancyTextParser, Quote, QuoteParser
 
 def chomp(line):
     if line[-1] == "\n":
@@ -38,14 +38,9 @@ class AsciiDocStateConstants:
     PARA_START = 2
     IN_PARA = 3
 
-class AsciiDocParser(xml.sax.xmlreader.XMLReader):
-    NS = "http://ns.crustytoothpaste.net/text-markup"
-    PREFIX = "_tmarkup"
+class AsciiDocParser(FancyTextParser):
     def __init__(self, ch = None):
-        self.dh = None
-        self.enth = None
-        self.eh = None
-        self.ch = ch
+        super().__init__(ch)
         self.state = AsciiDocStateConstants.START
         self.level = 0
         self.data = []
@@ -243,24 +238,6 @@ class AsciiDocParser(xml.sax.xmlreader.XMLReader):
                 if level == self.level:
                     self._process_text(title)
                 self._end_element("title")
-    def _start_element(self, name, attrs = {}):
-        if len(attrs):
-            # Each item has (ns, localname, qname, value).
-            attritems = {}
-            qnameitems = {}
-            for ak, av in attrs.items():
-                if type(ak) is list or type(ak) is tuple:
-                    attritems[(ak[0], ak[1])] = av
-                    qnameitems[ak[2]] = av
-                else:
-                    attritems[(None, ak)] = av
-                    qnameitems[ak] = av
-            a = xml.sax.xmlreader.AttributesNSImpl(attritems, qnameitems)
-        else:
-            a = xml.sax.xmlreader.AttributesNSImpl({}, {})
-        self.ch.startElementNS((self.NS, name), self.PREFIX + ":" + name, a)
-    def _end_element(self, name):
-        self.ch.endElementNS((self.NS, name), self.PREFIX + ":" + name)
     def parse(self, source):
         self.ch.startDocument()
         self.ch.startPrefixMapping(self.PREFIX, self.NS)
@@ -275,22 +252,6 @@ class AsciiDocParser(xml.sax.xmlreader.XMLReader):
         self._end_element("root")
         self.ch.endPrefixMapping(self.PREFIX)
         self.ch.endDocument()
-    def getContentHandler(self):
-        return self.ch
-    def setContentHandler(self, handler):
-        self.ch = handler
-    def getDTDHandler(self):
-        return self.dh
-    def setDTDHandler(self, handler):
-        self.dh = handler
-    def getEntityResolver(self):
-        return self.enth
-    def setEntityResolver(self, handler):
-        self.enth = handler
-    def getErrorHandler(self):
-        return self.eh
-    def setErrorHandler(self, handler):
-        self.eh = handler
 
 def create_parser():
     return AsciiDocParser()

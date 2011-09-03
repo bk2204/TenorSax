@@ -80,3 +80,46 @@ class QuoteParser:
                     text = text[:mo.start()] + s + text[mo.end():]
                     pos = mo.start() + len(s)
         return text
+
+class FancyTextParser(xml.sax.xmlreader.XMLReader):
+    NS = "http://ns.crustytoothpaste.net/text-markup"
+    PREFIX = "_tmarkup"
+    def __init__(self, ch=None):
+        self.ch = ch
+        self.dh = None
+        self.enth = None
+        self.eh = None
+    def _start_element(self, name, attrs = {}):
+        if len(attrs):
+            # Each item has (ns, localname, qname, value).
+            attritems = {}
+            qnameitems = {}
+            for ak, av in attrs.items():
+                if type(ak) is list or type(ak) is tuple:
+                    attritems[(ak[0], ak[1])] = av
+                    qnameitems[ak[2]] = av
+                else:
+                    attritems[(None, ak)] = av
+                    qnameitems[ak] = av
+            a = xml.sax.xmlreader.AttributesNSImpl(attritems, qnameitems)
+        else:
+            a = xml.sax.xmlreader.AttributesNSImpl({}, {})
+        self.ch.startElementNS((self.NS, name), self.PREFIX + ":" + name, a)
+    def _end_element(self, name):
+        self.ch.endElementNS((self.NS, name), self.PREFIX + ":" + name)
+    def getContentHandler(self):
+        return self.ch
+    def setContentHandler(self, handler):
+        self.ch = handler
+    def getDTDHandler(self):
+        return self.dh
+    def setDTDHandler(self, handler):
+        self.dh = handler
+    def getEntityResolver(self):
+        return self.enth
+    def setEntityResolver(self, handler):
+        self.enth = handler
+    def getErrorHandler(self):
+        return self.eh
+    def setErrorHandler(self, handler):
+        self.eh = handler
