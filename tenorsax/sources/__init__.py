@@ -107,6 +107,28 @@ class FancyTextParser(xml.sax.xmlreader.XMLReader):
         self.ch.startElementNS((self.NS, name), self.PREFIX + ":" + name, a)
     def _end_element(self, name):
         self.ch.endElementNS((self.NS, name), self.PREFIX + ":" + name)
+    def _process_tags(self, text):
+        """Emits a tagged text to the ContentHandler."""
+        reo = re.compile(r"<(/?)(\w)-([^/>]+)(/?)>")
+        pos = 0
+        while True:
+            mo = reo.search(text, pos)
+            if not mo:
+                break
+            is_end = mo.group(1) == "/"
+            tagtype = mo.group(2)
+            tagname = mo.group(3)
+            is_sc = mo.group(4) == "/"
+            self.ch.characters(text[pos:mo.start()])
+            if tagtype == "c":
+                self.ch.characters(chr(int(tagname[1:], 16)))
+            elif tagtype in "i":
+                if not is_sc and not is_end:
+                    self._start_element("inline", {"type": tagname})
+                elif not is_sc:
+                    self._end_element("inline")
+            pos = mo.end()
+        self.ch.characters(text[pos:])
     def getContentHandler(self):
         return self.ch
     def setContentHandler(self, handler):
