@@ -97,12 +97,35 @@ class AsciiDocParser(xml.sax.xmlreader.XMLReader):
     @staticmethod
     def _preprocess_for_tagging(text):
         """Converts angle brackets into tags."""
-        def repl(mo):
-            if mo.group(0) == "<":
-                return "<c-u003c/>"
+        replacements = {
+            "<": 0x3c,
+            ">": 0x3e,
+            "(C)": 0xa9,
+            "(TM)": 0x2122,
+            "(R)": 0xae,
+            "--": 0x2014,
+            "...": 0x2026,
+            "->": 0x2192,
+            "<-": 0x2190,
+            "=>": 0x21d2,
+            "<=": 0x21d0
+        }
+        def make_char(c):
+            return "<c-u" + c + "/>"
+        def repl_bs(mo):
+            return make_char(hex(ord(mo.group(1))))
+        def repl_seq(mo):
+            log("group:", mo.group(0))
+            return make_char(hex(replacements[mo.group(1)]))
+        def repl_ent(mo):
+            if mo.group(1)[0] == "x":
+                return make_char(mo.group(1)[1:])
             else:
-                return "<c-u003e/>"
-        return re.sub(r"[<>]", repl, text)
+                return make_char(hex(int(mo.group(1))))
+        text = re.sub(r"\\(.)", repl_bs, text)
+        text = re.sub(r"([<>]|\((C|TM|R)\)|--|\.\.\.|->|<-|=>|<=)", repl_seq,
+                text)
+        return re.sub(r"&#(x[A-Fa-f0-9]+|\d+);", repl_ent, text)
     def _process_text(self, text):
         text = self._preprocess_for_tagging(text)
         text = self._process_quotes(text)
