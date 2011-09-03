@@ -22,6 +22,7 @@ import re
 import xml.sax.xmlreader
 
 from tenorsax.util import *
+from tenorsax.sources import Quote, QuoteParser
 
 def chomp(line):
     if line[-1] == "\n":
@@ -36,13 +37,6 @@ class AsciiDocStateConstants:
     TEXT_LINE = 1
     PARA_START = 2
     IN_PARA = 3
-
-class Quote:
-    def __init__(self, lq, rq, tag, unconstrained=False):
-        self.lq = lq
-        self.rq = rq
-        self.tag = tag
-        self.simple = not unconstrained
 
 class AsciiDocParser(xml.sax.xmlreader.XMLReader):
     NS = "http://ns.crustytoothpaste.net/text-markup"
@@ -76,43 +70,8 @@ class AsciiDocParser(xml.sax.xmlreader.XMLReader):
             Quote("^", "^", "superscript", True),
             Quote("~", "~", "subscript", True)
         ]
-        for q in tags:
-            lq = q.lq
-            rq = q.rq
-            tag = q.tag
-            if not q.simple:
-                # Unconstrained quotes can appear anywhere.
-                reo = re.compile(r'(?msu)(^|.)(\[(?P<attrlist>[^[\]]+?)\])?' +
-                        r'(?:' + re.escape(lq) + r')' +
-                        r'(?P<content>.+?)(?:'+re.escape(rq)+r')')
-            else:
-                # The text within constrained quotes must be bounded by white
-                # space.  Non-word (\W) characters are allowed at boundaries to
-                # accomodate enveloping quotes and punctuation e.g. a='x',
-                # ('x'), 'x', ['x'].
-                reo = re.compile(r'(?msu)(^|[^\w;:}])' +
-                    r'(\[(?P<attrlist>[^[\]]+?)\])?' +
-                    r'(?:' + re.escape(lq) + r')' +
-                    r'(?P<content>\S|\S.*?\S)(?:'+re.escape(rq)+r')(?=\W|$)')
-            pos = 0
-            while True:
-                mo = reo.search(text, pos)
-                if not mo:
-                    break
-                if text[mo.start()] == '\\':
-                    # Delete leading backslash.
-                    text = text[:mo.start()] + text[mo.start()+1:]
-                    # Skip past start of match.
-                    pos = mo.start() + 1
-                else:
-                    attrlist = {}
-                    #parse_attributes(mo.group('attrlist'), attrlist)
-                    stag = ''.join(["<i-", tag, ">"])
-                    etag = ''.join(["</i-", tag, ">"])
-                    s = mo.group(1) + stag + mo.group('content') + etag
-                    text = text[:mo.start()] + s + text[mo.end():]
-                    pos = mo.start() + len(s)
-        return text
+        parser = QuoteParser(tags)
+        return parser.parse(text)
     def _process_tags(self, text):
         """Emits a tagged text to the ContentHandler."""
         reo = re.compile(r"<(/?)(\w)-([^/>]+)(/?)>")
