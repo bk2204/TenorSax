@@ -19,6 +19,7 @@
 # Part of the parser in this file has been taken from AsciiDoc 8.6.5.
 
 import re
+import tenorsax.sources
 import xml.sax.xmlreader
 
 from tenorsax.util import *
@@ -37,14 +38,28 @@ class AsciiDocStateConstants:
     TEXT_LINE = 1
     PARA_START = 2
     IN_PARA = 3
+    IN_HEADER = 4
+    HEADER_LINE = 4
+
+class AuthorParser:
+    @staticmethod
+    def _ununderscore(name):
+        return re.sub("_", " ", name)
+    def parse(self, line):
+        mobj = re.match(r"(\S+)(\s+((\S+)\s+)?(\S+))?(\s+<(\S+)>)?", line)
+        if mobj is None:
+            return None
+        return tenorsax.sources.Author([mobj.group(x) for x in (1, 4, 5, 7)])
 
 class AsciiDocParser(FancyTextParser):
+    TITLE_CHARS = "=-~^+"
     def __init__(self, ch = None):
         super().__init__(ch)
         self.state = AsciiDocStateConstants.START
         self.level = 0
         self.data = []
         self.inlines = []
+        self.metadata = tenorsax.sources.Metadata()
     @staticmethod
     def _process_quotes(text):
         """Process any quotes in this text and replace them with tags."""
@@ -103,8 +118,23 @@ class AsciiDocParser(FancyTextParser):
         text = self._preprocess_for_tagging(text)
         text = self._process_quotes(text)
         self._process_tags(text)
+    def _handle_title_line(self, line):
+        log("start of line is title char", line[0])
+        prev_line = self.data.pop()
+        l = len(prev_line)
+        # Allow give or take two characters.
+        pat = r"{0}{1}{3},{4}{2}$".format("\\" + line[0], "{", "}",
+                l - 2, l + 2)
+        m = re.match(pat, line)
+        if m is None:
+            self.data.append(prev_line)
+            self.data.append(line)
+            return None
+        else:
+            idx = self.TITLE_CHARS.index(line[0])
+            self._start_section(idx, prev_line, line)
+            return idx
     def _handle_line(self, line):
-        TITLE_CHARS = "=-~^+"
         k = AsciiDocStateConstants
         # A single line comment, not a comment block.
         if line.startswith("//") and line[2] != "/":
@@ -113,32 +143,40 @@ class AsciiDocParser(FancyTextParser):
             if line[0] == "[":
                 raise NotImplementedError
             elif line[0] in "=":
+                # One-line titles.
                 m = re.match(r"(={1,5})\s+(.*\S*)\s+\1\s*$", line)
                 if m is None:
                     self.state = k.TEXT_LINE
+                    self._generate_metadata(self.metadata)
                     self.data.append(line)
                 else:
                     l = len(m.group(1))
                     self._start_section(l, m.group(2))
             else:
-                self.state = k.TEXT_LINE
+                self.state = k.HEADER_LINE
                 self.data.append(line)
+        elif self.state == k.HEADER_LINE:
+            if re.match("^\s*$", line):
+                self._generate_metadata(self.metadata)
+                self._flush()
+                self.state = k.PARA_START
+            elif line[0] in self.TITLE_CHARS:
+                level = self._handle_title_line(line)
+                if level != 0:
+                    self.state = k.PARA_START
+            else:
+                self.metadata.author = AuthorParser().parse(line)
+                self.state = k.IN_HEADER
+        elif self.state == k.IN_HEADER:
+            if re.match("^\s*$", line):
+                self._generate_metadata(self.metadata)
+                self._flush()
+                self.state = k.PARA_START
         elif self.state == k.TEXT_LINE or self.state == k.IN_PARA:
             if line[0] == "[":
                 raise NotImplementedError
-            elif line[0] in TITLE_CHARS:
-                log("start of line is title char", line[0])
-                prev_line = self.data.pop()
-                l = len(prev_line)
-                pat = r"{0}{1}{3},{4}{2}$".format("\\" + line[0], "{", "}",
-                        l - 2, l + 2)
-                m = re.match(pat, line)
-                if m is None:
-                    self.data.append(prev_line)
-                    self.data.append(line)
-                else:
-                    self._start_section(TITLE_CHARS.index(line[0]), prev_line,
-                            line)
+            elif line[0] in self.TITLE_CHARS:
+                self._handle_title_line(line)
             elif re.match("^\s*$", line):
                 if self.state == k.IN_PARA:
                     self._flush()

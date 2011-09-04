@@ -19,6 +19,7 @@
 # Part of the parser in this file has been taken from AsciiDoc 8.6.5.
 
 import re
+import tenorsax
 import xml.sax.xmlreader
 
 from tenorsax.util import *
@@ -81,6 +82,17 @@ class QuoteParser:
                     pos = mo.start() + len(s)
         return text
 
+class Metadata:
+    def __init__(self):
+        self.author = None
+
+class Author:
+    def __init__(self, tup):
+        self.firstname = tup[0]
+        self.middlename = tup[1]
+        self.lastname = tup[2]
+        self.email = tup[3]
+
 class FancyTextParser(xml.sax.xmlreader.XMLReader):
     NS = "http://ns.crustytoothpaste.net/text-markup"
     PREFIX = "_tmarkup"
@@ -129,6 +141,21 @@ class FancyTextParser(xml.sax.xmlreader.XMLReader):
                     self._end_element("inline")
             pos = mo.end()
         self.ch.characters(text[pos:])
+    def _generate_metadata(self, meta):
+        self._start_element("meta")
+        self._start_element("generator", {"name": "TenorSax",
+            "version": tenorsax.__version__})
+        self._end_element("generator")
+        if meta.author is not None:
+            self._start_element("author")
+            for k in ("firstname", "middlename", "lastname", "email"):
+                v = meta.author.__dict__[k]
+                if v is not None:
+                    self._start_element(k)
+                    self.ch.characters(v)
+                    self._end_element(k)
+            self._end_element("author")
+        self._end_element("meta")
     def getContentHandler(self):
         return self.ch
     def setContentHandler(self, handler):
