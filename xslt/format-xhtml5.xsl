@@ -26,7 +26,7 @@
 				<link rel="stylesheet" href="default.css"/>
 				<xsl:apply-templates select="tm:meta"/>
 			</head>
-			<body>
+			<body class="article">
 				<xsl:call-template name="body-header"/>
 			</body>
 		</html>
