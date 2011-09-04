@@ -60,6 +60,7 @@ class AsciiDocParser(FancyTextParser):
         self.data = []
         self.inlines = []
         self.metadata = tenorsax.sources.Metadata()
+        self.lines = []
     @staticmethod
     def _process_quotes(text):
         """Process any quotes in this text and replace them with tags."""
@@ -137,67 +138,85 @@ class AsciiDocParser(FancyTextParser):
             idx = self.TITLE_CHARS.index(line[0])
             self._start_section(idx, prev_line, line)
             return idx
-    def _handle_line(self, line):
+    def _parse_style(self, line):
+        mo = re.match(r"^\[(.*)\]$", line)
+        if mo is None:
+            return [line]
+        return re.split(r",\s*", mo.group(1))
+    def _next_line(self):
+        try:
+            return self.lines.pop(0)
+        except IndexError:
+            raise StopIteration
+    def _do_state_machine(self):
         k = AsciiDocStateConstants
-        # A single line comment, not a comment block.
-        if line.startswith("//") and line[2] != "/":
-            return
-        if self.state == k.START:
-            if line[0] == "[":
-                raise NotImplementedError
-            elif line[0] in "=":
-                # One-line titles.
-                m = re.match(r"(={1,5})\s+(.*\S*)\s+\1\s*$", line)
-                if m is None:
-                    self.state = k.TEXT_LINE
-                    self._generate_metadata(self.metadata)
-                    self.data.append(line)
+        line = self._next_line()
+        self.state = k.START
+        while True:
+            # A single line comment, not a comment block.
+            if line.startswith("//") and line[2] != "/":
+                line = self._next_line()
+                continue
+            if self.state == k.START:
+                if line[0] == "[":
+                    raise NotImplementedError
+                elif line[0] in "=":
+                    # One-line titles.
+                    m = re.match(r"(={1,5})\s+(.*\S*)\s+\1\s*$", line)
+                    if m is None:
+                        self.state = k.TEXT_LINE
+                        self._generate_metadata(self.metadata)
+                        self.data.append(line)
+                    else:
+                        l = len(m.group(1))
+                        self._start_section(l, m.group(2))
                 else:
-                    l = len(m.group(1))
-                    self._start_section(l, m.group(2))
-            else:
-                self.state = k.HEADER_LINE
-                self.data.append(line)
-        elif self.state == k.HEADER_LINE:
-            if re.match("^\s*$", line):
-                self._generate_metadata(self.metadata)
-                self._flush()
-                self.state = k.PARA_START
-            elif line[0] in self.TITLE_CHARS:
-                level = self._handle_title_line(line)
-                if level != 0:
-                    self.state = k.PARA_START
-            else:
-                self.metadata.author = AuthorParser().parse(line)
-                self.state = k.IN_HEADER
-        elif self.state == k.IN_HEADER:
-            if re.match("^\s*$", line):
-                self._generate_metadata(self.metadata)
-                self._flush()
-                self.state = k.PARA_START
-        elif self.state == k.TEXT_LINE or self.state == k.IN_PARA:
-            if line[0] == "[":
-                raise NotImplementedError
-            elif line[0] in self.TITLE_CHARS:
-                self._handle_title_line(line)
-            elif re.match("^\s*$", line):
-                if self.state == k.IN_PARA:
+                    self.state = k.HEADER_LINE
+                    self.data.append(line)
+            elif self.state == k.HEADER_LINE:
+                if re.match("^\s*$", line):
+                    self._generate_metadata(self.metadata)
                     self._flush()
-                self.state = k.PARA_START
+                    self.state = k.PARA_START
+                elif line[0] in self.TITLE_CHARS:
+                    level = self._handle_title_line(line)
+                    log("section title in header line")
+                    if level != 0:
+                        self.state = k.PARA_START
+                else:
+                    self.metadata.author = AuthorParser().parse(line)
+                    self.state = k.IN_HEADER
+            elif self.state == k.IN_HEADER:
+                if re.match("^\s*$", line):
+                    self._generate_metadata(self.metadata)
+                    self._flush()
+                    self.state = k.PARA_START
+            elif self.state == k.TEXT_LINE or self.state == k.IN_PARA:
+                if line[0] == "[":
+                    raise NotImplementedError
+                elif line[0] in self.TITLE_CHARS:
+                    self._handle_title_line(line)
+                    log("section title in text line")
+                elif re.match("^\s*$", line):
+                    if self.state == k.IN_PARA:
+                        self._flush()
+                    self.state = k.PARA_START
+                else:
+                    self.data.append(line)
+            elif self.state == k.PARA_START:
+                self._flush()
+                if line[0] == "[":
+                    raise NotImplementedError
+                elif re.match("^\s*$", line):
+                    pass
+                else:
+                    self.data.append(line)
+                self._start_para()
+                self.state = k.IN_PARA
             else:
-                self.data.append(line)
-        elif self.state == k.PARA_START:
-            self._flush()
-            if line[0] == "[":
                 raise NotImplementedError
-            elif re.match("^\s*$", line):
-                return
-            else:
-                self.data.append(line)
-            self._start_para()
-            self.state = k.IN_PARA
-        else:
-            raise NotImplementedError
+            line = self._next_line()
+            log("next line; current state:", self.state)
     def _flush_text(self):
         self._process_text(''.join(self.data))
         self.data = []
@@ -262,8 +281,11 @@ class AsciiDocParser(FancyTextParser):
         self.ch.startPrefixMapping(self.PREFIX, self.NS)
         self._start_element("root")
         self.ch.ignorableWhitespace("\n")
-        for line in source:
-            self._handle_line(line)
+        self.lines = [l for l in source]
+        try:
+            self._do_state_machine()
+        except StopIteration:
+            pass
         self._flush()
         while self.level > 0:
             self._end_element("section")
