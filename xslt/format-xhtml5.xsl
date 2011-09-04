@@ -110,6 +110,8 @@
 		<div xml:id="header">
 			<h1><xsl:apply-templates select="tm:title"/></h1>
 			<xsl:apply-templates select="/tm:root/tm:meta/*" mode="body"/>
+		</div>
+		<div xml:id="content">
 			<xsl:apply-templates
 				select="tm:*[local-name()!='title' and local-name()!='meta']"/>
 		</div>
