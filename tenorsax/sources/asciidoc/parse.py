@@ -120,7 +120,10 @@ class AsciiDocParser(FancyTextParser):
         self._process_tags(text)
     def _handle_title_line(self, line):
         log("start of line is title char", line[0])
-        prev_line = self.data.pop()
+        try:
+            prev_line = self.data.pop()
+        except IndexError:
+            return None
         l = len(prev_line)
         # Allow give or take two characters.
         pat = r"{0}{1}{3},{4}{2}$".format("\\" + line[0], "{", "}",
