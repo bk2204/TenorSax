@@ -141,8 +141,15 @@ class AsciiDocParser(FancyTextParser):
     def _parse_style(self, line):
         mo = re.match(r"^\[(.*)\]$", line)
         if mo is None:
-            return [line]
+            return None
         return re.split(r",\s*", mo.group(1))
+    def _get_line_type(self, line):
+        if re.match("^\s*$", line):
+            return "blank"
+        elif self._parse_style(line):
+            return "block-style"
+        else:
+            return None
     def _next_line(self):
         try:
             return self.lines.pop(0)
@@ -153,12 +160,13 @@ class AsciiDocParser(FancyTextParser):
         line = self._next_line()
         self.state = k.START
         while True:
+            linetype = self._get_line_type(line)
             # A single line comment, not a comment block.
             if line.startswith("//") and line[2] != "/":
                 line = self._next_line()
                 continue
             if self.state == k.START:
-                if line[0] == "[":
+                if linetype == "block-style":
                     raise NotImplementedError
                 elif line[0] in "=":
                     # One-line titles.
@@ -174,7 +182,7 @@ class AsciiDocParser(FancyTextParser):
                     self.state = k.HEADER_LINE
                     self.data.append(line)
             elif self.state == k.HEADER_LINE:
-                if re.match("^\s*$", line):
+                if linetype == "blank":
                     self._generate_metadata(self.metadata)
                     self._flush()
                     self.state = k.PARA_START
@@ -187,17 +195,17 @@ class AsciiDocParser(FancyTextParser):
                     self.metadata.author = AuthorParser().parse(line)
                     self.state = k.IN_HEADER
             elif self.state == k.IN_HEADER:
-                if re.match("^\s*$", line):
+                if linetype == "blank":
                     self._generate_metadata(self.metadata)
                     self._flush()
                     self.state = k.PARA_START
             elif self.state == k.TEXT_LINE or self.state == k.IN_PARA:
-                if line[0] == "[":
+                if linetype == "block-style":
                     raise NotImplementedError
                 elif line[0] in self.TITLE_CHARS:
                     self._handle_title_line(line)
                     log("section title in text line")
-                elif re.match("^\s*$", line):
+                elif linetype == "blank":
                     if self.state == k.IN_PARA:
                         self._flush()
                     self.state = k.PARA_START
@@ -205,9 +213,9 @@ class AsciiDocParser(FancyTextParser):
                     self.data.append(line)
             elif self.state == k.PARA_START:
                 self._flush()
-                if line[0] == "[":
+                if linetype == "block-style":
                     raise NotImplementedError
-                elif re.match("^\s*$", line):
+                elif linetype == "blank":
                     pass
                 else:
                     self.data.append(line)
