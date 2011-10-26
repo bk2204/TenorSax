@@ -1,0 +1,22 @@
+.do tenorsax ext 1
+.mso e.tmac
+.de article
+..
+.de book
+..
+.als essay article
+.als poem article
+.als story article
+.de au
+.ce 1000
+.i "\\$1" "\\$2"
+.ce 0
+.sp
+..
+.de tt
+.ce 1000
+.b "\\$1" "\\$2"
+.ce 0
+.sp
+..
+.\" vim: set ft=groff:
