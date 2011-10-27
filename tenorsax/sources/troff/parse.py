@@ -758,6 +758,8 @@ class LineParser:
                     ctxt += c
             elif pstate == k.IN_QUOTEDARG or pstate == k.IN_QUOTEDARGDELAY:
                 if c == "\n":
+                    self.items.append(ctxt)
+                    ctxt = ""
                     pstate = k.EOL
                 elif c == env.ec and pstate == k.IN_QUOTEDARG:
                     esc = self._parse_escape()
