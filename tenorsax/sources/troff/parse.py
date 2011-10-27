@@ -651,12 +651,18 @@ class LineParser:
                     self.inject(esc)
                     if esc.delay():
                         kind = CharacterData
-                        pstate = k.IN_ARGDELAY
+                        if self._cur_is_executable():
+                            pstate = k.IN_EXECUTABLEDELAY
+                        else:
+                            pstate = k.IN_ARGDELAY
                     elif esc.executable() and esc.is_start:
                         pstate = k.IN_EXECUTABLE
                         nbraces += 1
                     else:
-                        pstate = k.IN_ARG
+                        if self._cur_is_executable():
+                            pstate = k.IN_EXECUTABLE
+                        else:
+                            pstate = k.IN_ARG
                 elif c.isspace():
                     pass
                 elif self._cur_is_executable():
@@ -672,6 +678,7 @@ class LineParser:
                     pstate = k.IN_ARG
                     ctxt += c
             elif pstate == k.IN_EXECUTABLE or pstate == k.IN_EXECUTABLEDELAY:
+                log("nbraces", nbraces)
                 if c == env.ec and pstate == k.IN_EXECUTABLE:
                     esc = self._parse_escape()
                     log("in executable", esc)
@@ -712,10 +719,13 @@ class LineParser:
                     inc = self._cur_is_incremental
                     pstate = self._parse_numeric(pstate, c, inc=inc)[0]
                 elif c.isspace():
-                    self.items.append(ctxt)
-                    ctxt = ""
-                    log("in arg space", self.items)
-                    pstate = k.SEPARATOR
+                    if self.curreq and len(self.items) == self.curreq.max_args():
+                        ctxt += c
+                    else:
+                        self.items.append(ctxt)
+                        ctxt = ""
+                        log("in arg space", self.items)
+                        pstate = k.SEPARATOR
                 elif self._cur_is_name_arg() and not self.state.extended_names() and len(ctxt) == 2:
                     self.items.append(ctxt)
                     ctxt = c
