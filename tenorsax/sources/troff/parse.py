@@ -539,6 +539,31 @@ class LineParser:
             (pstate, result) = self._parse_numeric(pstate, c)
             self.items.pop()
             result = decimal.Decimal(result)
+        elif c in "dr":
+            condtype = c
+            cur_s = ""
+            pstate = k.SEPARATOR
+            while True:
+                c = self._next_character()
+                if c == self.state.env[0].ec:
+                    if delay:
+                        delay = False
+                    else:
+                        esc = self._parse_escape()
+                        self.inject(esc)
+                        if esc.delay:
+                            delay = True
+                elif c == "\n":
+                    pstate = k.EOL
+                    break
+                elif c.isspace() and cur_s:
+                    break
+                else:
+                    cur_s += c
+            if condtype == "d":
+                result = cur_s in self.state.requests
+            else:
+                result = False
         else:
             sep = c
             nsep = 1

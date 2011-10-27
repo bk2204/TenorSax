@@ -290,6 +290,7 @@ class ConditionalTests(TroffToTextTestCase):
         self.tce = ".ds on text\n.if !'\\*(no'\\*(on' \{\nbranch\n.\}\n"
         self.tcf = ".ds on text\n.ie !'\\*(no'\\*(on' \{\nfirst branch\n.\}\n.el \{\nsecond branch\n.\}\n"
         self.td0 = ".de AA\n.ie \\\\n(no=5 \\\\$1 true\n.el \\\\$1 false\n..\n.AA branch\n"
+        self.td1 = ".de AA\n.ie dBB \\\\$1 true\n.el \\\\$1 false\n..\n.AA branch\n"
     def test_short_if_false(self):
         self.assertEqual(self.t_run(".nr no 0\n" + self.tc0), "")
     def test_short_if_true(self):
@@ -376,6 +377,10 @@ class ConditionalTests(TroffToTextTestCase):
         self.assertEqual(self.t_run(".nr no 5\n" + self.td0), "branch true\n")
     def test_short2_ie_negative(self):
         self.assertEqual(self.t_run(".nr no -2\n" + self.td0), "branch false\n")
+    def test_cond_reg_true(self):
+        self.assertEqual(self.t_run(".ds BB \"abc\n" + self.td1), "branch true\n")
+    def test_cond_reg_false(self):
+        self.assertEqual(self.t_run(self.td1), "branch false\n")
 
 class CommentTests(TroffToTextTestCase):
     def test_default(self):
