@@ -60,8 +60,11 @@ class StringTests(TroffToTextTestCase):
         self.dd = ".de DD\ntx\n..\n"
         self.ee = ".de EE\ntxt\n..\n"
         self.tx = ".ds tx Text\n"
+        self.bb = ".ds BB \"\n.if dBB exists\n"
     def test_creation(self):
         self.assertEqual(self.t_run(".ds AA Text\n\*(AA\n"), "Text\n")
+    def test_short_empty(self):
+        self.assertEqual(self.t_run(self.bb), "exists\n")
     def test_parse_last(self):
         self.assertEqual(self.t_run('.ds AA "Some text\n\*(AA\n'),
                 "Some text\n")
