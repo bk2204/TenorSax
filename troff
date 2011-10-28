@@ -54,13 +54,14 @@ parser.add_option("-m", dest="macros", action="append")
 writer = xml.sax.saxutils.XMLGenerator(encoding="UTF-8")
 if options.stylesheet:
     f = tenorsax.filters.xslt.XSLTTransformer(writer, options.stylesheet)
-elif options.fmt in ("xml", "fo"):
-    ssheet = find_first("xslt", "format-" + options.fmt)
-    f = tenorsax.filters.xslt.XSLTTransformer(writer, ssheet)
 elif options.fmt == "test":
     f = tenorsax.filters.xslt.TextXSLTTransformer(sys.stdout, "xslt/trim.xsl")
 else:
-    f = writer
+    ssheet = find_first("xslt", "format-" + options.fmt)
+    if ssheet is not None:
+        f = tenorsax.filters.xslt.XSLTTransformer(writer, ssheet)
+    else:
+        f = writer
 p = tenorsax.sources.troff.parse.Parser(f)
 
 filelist = []
