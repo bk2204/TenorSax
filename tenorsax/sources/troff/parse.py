@@ -489,6 +489,8 @@ class LineParser:
             return NumericEscape(self.state, self._parse_escape_name(), inc)
         elif c == "\n":
             return CharacterEscape(self.state, "")
+        elif c == "t":
+            return CharacterEscape(self.state, "\t")
         elif c in '#"':
             x = self._peek_next_character()
             while x != "\n":
