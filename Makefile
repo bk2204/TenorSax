@@ -1,6 +1,8 @@
 PYTHON3		= python3
 ENVVARS		= PYTHONPATH=.
-SCRIPT		= tenorsax/tests/troff.py
+SCRIPT		:= $(notdir $(wildcard tenorsax/tests/*.py))
+SCRIPT		:= $(filter-out __init__.py,$(SCRIPT))
+SCRIPT		:= $(patsubst %.py,tenorsax.tests.%,$(SCRIPT))
 
 DOCS		= quick-test manual
 ifneq ($(FANCY),)
@@ -13,10 +15,10 @@ XSLT		= http://docbook.sourceforge.net/release/xsl-ns/current/fo/docbook.xsl
 endif
 
 test check:
-	$(ENVVARS) $(PYTHON3) $(SCRIPT)
+	$(ENVVARS) $(PYTHON3) -m unittest $(SCRIPT)
 
 vtest vcheck test-v:
-	$(ENVVARS) $(PYTHON3) $(SCRIPT) -v
+	$(ENVVARS) $(PYTHON3) -m unittest -v $(SCRIPT)
 
 clean:
 	$(RM) doc/*.pdf doc/*.fo doc/*.xml
