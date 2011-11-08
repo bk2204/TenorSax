@@ -11,6 +11,7 @@
 	<xsl:template match="t:main">
 		<xsl:apply-templates select="*"/>
 	</xsl:template>
+	<xsl:template match="t:break-page"/>
 	<xsl:template match="t:block">
 		<xsl:variable name="content" select="string(.)"/>
 		<xsl:variable name="ncontent" select="normalize-space($content)"/>

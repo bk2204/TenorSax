@@ -60,6 +60,14 @@ class RequestImpl_als(RequestImplementation):
             return
         self.state.requests[args[0]] = self.state.requests[args[1]]
 
+class RequestImpl_bp(RequestImplementation):
+    def max_args(self):
+        return 1
+    def execute(self, callinfo):
+        args = callinfo.args
+        self.state.ch.startTroffElement("break-page")
+        self.state.ch.endTroffElement("break-page")
+
 class RequestImpl_br(RequestImplementation):
     def execute(self, callinfo):
         if callinfo.brk:
