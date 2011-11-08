@@ -1,0 +1,224 @@
+.if ddo \{
+.if dtenorsax .do tenorsax ext 1
+.\}
+.de status
+.ie d\\$1 \\$1\timplemented
+.el \\$1\tmissing
+.br
+..
+.\" Section 1.
+.status do
+.status xflag
+.\" Section 2.
+.status lc_ctype
+.status ps
+.status fzoom
+.status ss
+.status cs
+.status bd
+.status ft
+.status fp
+.status fps
+.status feature
+.status fallback
+.status hidechar
+.status spacewidth
+.status fspacewidth
+.\" Section 3.
+.status pl
+.status papersize
+.status mediasize
+.status cropat
+.status trimat
+.status bleedat
+.status bp
+.status pn
+.status po
+.status ne
+.status mk
+.status rt
+.\" Section 4.
+.status br
+.status brp
+.status fi
+.status nf
+.status ad
+.status na
+.status padj
+.status ce
+.status rj
+.status brnl
+.status brpnl
+.status minss
+.status letadj
+.status sentchar
+.status transchar
+.status track
+.status kern
+.status fkern
+.status kernpair
+.status kernafter
+.status kernbefore
+.status lhang
+.status rhang
+.\" Section 5.
+.status vs
+.status ls
+.status sp
+.status sv
+.status os
+.status ns
+.status rs
+.\" Section 6.
+.status ll
+.status in
+.status ti
+.status pshape
+.\" Section 7.
+.status de
+.status am
+.status ds
+.status as
+.status lds
+.status substring
+.status length
+.status index
+.status chop
+.status rm
+.status rn
+.status di
+.status da
+.status box
+.status boxa
+.status unformat
+.status asciify
+.status wh
+.status ch
+.status dwh
+.status dch
+.status dt
+.status vpt
+.status it
+.status itc
+.status return
+.status shift
+.status als
+.status blm
+.status em
+.status recursionlimit
+.\" Section 8.
+.status nr
+.status nrf
+.status lnr
+.status lnrf
+.status af
+.status rr
+.status rnn
+.status aln
+.\" Section 9.
+.status ta
+.status tc
+.status lc
+.status fc
+.\" Section 10.
+.status ec
+.status eo
+.status ecs
+.status ecr
+.status lg
+.status flig
+.status fdeferlig
+.status ul
+.status cu
+.status uf
+.status cc
+.status c2
+.status tr
+.status trin
+.status trnt
+.status ftr
+.status char
+.status fchar
+.status rchar
+.status output
+.\" Section 13.
+.status nh
+.status hy
+.status hylang
+.status shc
+.status hcode
+.status hylen
+.status hlm
+.status hypp
+.status breakchar
+.status nhychar
+.status hc
+.status hw
+.\" Section 14.
+.status tl
+.status pc
+.status lt
+.\" Section 15.
+.status nm
+.status nn
+.\" Section 16.
+.status if
+.status ie
+.status while
+.status break
+.status continue
+.\" Section 17.
+.status ev
+.status evc
+.\" Section 18.
+.status rd
+.status ex
+.\" Section 19.
+.status so
+.status pso
+.status nx
+.status sy
+.status pi
+.status cf
+.status open
+.status opena
+.status write
+.status writec
+.status writem
+.status close
+.\" Section 20.
+.status mc
+.status lpfx
+.status tm
+.status tmc
+.status nop
+.status ab
+.status ig
+.status lf
+.status pm
+.status fl
+.\" Section 21.
+.status warn
+.status spreadwarn
+.status errprint
+.status watch
+.status unwatch
+.status watchlength
+.status watchn
+.status unwatchn
+.\" Section 22.
+.status CL
+.\" Section 23.
+.status psbb
+.status BP
+.status EP
+.status PI
+.\" Section 25.
+.status cp
+.status mso
+.\" TenorSax-specific.
+.status tenorsax
+.status namespace
+.status start
+.status end
+.\" vim: set ft=groff:
