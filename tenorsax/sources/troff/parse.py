@@ -173,10 +173,12 @@ class Invocable(StringNamespacedParseObject):
     def invoke(self, lp):
         res = None
         try:
+            if self.name not in self.state.requests:
+                s = tenorsax.sources.troff.stringlike.StringData(self.state, "")
+                self.state.requests[self.name] = s
+                trace(self.state, TRACE_UNDEF, "request", self.name,
+                    "is not defined")
             res = self.state.requests[self.name](self.state).execute(self)
-        except KeyError:
-            trace(self.state, TRACE_UNDEF, "request", self.name,
-                "is not defined")
         except Exception:
             pass
         if res is not None:
