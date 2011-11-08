@@ -70,6 +70,9 @@ for i in options.macros or []:
     if val is not None:
         filelist.append(val)
 filelist.extend(args or ["/dev/stdin"])
+init = find_first("tmac", "init")
+if init is not None:
+    filelist[0:0] = [init]
 try:
     p.parse(fileinput.input(files=filelist))
 except XSLTApplyError as e:
