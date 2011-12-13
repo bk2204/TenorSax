@@ -2,6 +2,7 @@
 
 import fileinput
 import optparse
+import os
 import os.path
 import sys
 import xml.sax.saxutils
@@ -81,4 +82,8 @@ def main():
         print_error("transforming XML", options.fmt, e)
 
 if __name__ == '__main__':
-    main()
+    if "TENORSAX_PROFILE" in os.environ:
+        import cProfile
+        cProfile.run("main()", os.environ["TENORSAX_PROFILE"])
+    else:
+        main()
