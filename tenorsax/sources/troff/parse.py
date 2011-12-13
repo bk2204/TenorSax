@@ -272,7 +272,7 @@ class LineParser:
     """Parses troff input line-by-line."""
     def __init__(self, state, line):
         self.state = state
-        self.data = line
+        self.data = list(reversed(line))
         self.chartrap = []
         self.request = False
         self.brk = False
@@ -319,12 +319,9 @@ class LineParser:
         except AttributeError:
             return False
     def _peek_next_character(self):
-        if len(self.data) == 0:
-            raise StopIteration
-        return self.data[0]
+        return self.data[-1]
     def _next_character(self):
-        c = self._peek_next_character()
-        self.data = self.data[1:]
+        c = self.data.pop()
         if len(self.chartrap) != 0:
             self.chartrap[-1] -= 1
             if self.chartrap[-1] == 0:
@@ -334,7 +331,7 @@ class LineParser:
         return c
     def inject(self, more, args=None):
         s = str(more)
-        self.data = "".join([s, self.data])
+        self.data.extend(reversed(list(s)))
         if args is not None:
             self.chartrap.append(len(s))
             self.state.macroargs.append(args)
@@ -1015,9 +1012,12 @@ class Parser:
         except AttributeError:
             self.lp.inject(finput)
         self._set_up()
-        for item in self.lp.parse():
-            log(item, type(item))
-            item.invoke(self.lp)
+        try:
+            for item in self.lp.parse():
+                log(item, type(item))
+                item.invoke(self.lp)
+        except IndexError:
+            pass
         self._tear_down()
  
 def create_parser():
