@@ -45,35 +45,40 @@ def find_first(type_, name):
                 return possible
     return None
 
-parser = optparse.OptionParser()
-parser.add_option("-T", dest="fmt", default="troff-xml")
-parser.add_option("-s", dest="stylesheet")
-parser.add_option("-m", dest="macros", action="append")
-(options, args) = parser.parse_args()
-
-writer = xml.sax.saxutils.XMLGenerator(encoding="UTF-8")
-if options.stylesheet:
-    f = tenorsax.filters.xslt.XSLTTransformer(writer, options.stylesheet)
-elif options.fmt == "test":
-    f = tenorsax.filters.xslt.TextXSLTTransformer(sys.stdout, "xslt/trim.xsl")
-else:
-    ssheet = find_first("xslt", "format-" + options.fmt)
-    if ssheet is not None:
-        f = tenorsax.filters.xslt.XSLTTransformer(writer, ssheet)
+def main():
+    parser = optparse.OptionParser()
+    parser.add_option("-T", dest="fmt", default="troff-xml")
+    parser.add_option("-s", dest="stylesheet")
+    parser.add_option("-m", dest="macros", action="append")
+    (options, args) = parser.parse_args()
+    
+    writer = xml.sax.saxutils.XMLGenerator(encoding="UTF-8")
+    if options.stylesheet:
+        f = tenorsax.filters.xslt.XSLTTransformer(writer, options.stylesheet)
+    elif options.fmt == "test":
+        f = tenorsax.filters.xslt.TextXSLTTransformer(sys.stdout,
+                "xslt/trim.xsl")
     else:
-        f = writer
-p = tenorsax.sources.troff.parse.Parser(f)
+        ssheet = find_first("xslt", "format-" + options.fmt)
+        if ssheet is not None:
+            f = tenorsax.filters.xslt.XSLTTransformer(writer, ssheet)
+        else:
+            f = writer
+    p = tenorsax.sources.troff.parse.Parser(f)
+    
+    filelist = []
+    for i in options.macros or []:
+        val = find_first("tmac", i)
+        if val is not None:
+            filelist.append(val)
+    filelist.extend(args or ["/dev/stdin"])
+    init = find_first("tmac", "init")
+    if init is not None:
+        filelist[0:0] = [init]
+    try:
+        p.parse(fileinput.input(files=filelist))
+    except XSLTApplyError as e:
+        print_error("transforming XML", options.fmt, e)
 
-filelist = []
-for i in options.macros or []:
-    val = find_first("tmac", i)
-    if val is not None:
-        filelist.append(val)
-filelist.extend(args or ["/dev/stdin"])
-init = find_first("tmac", "init")
-if init is not None:
-    filelist[0:0] = [init]
-try:
-    p.parse(fileinput.input(files=filelist))
-except XSLTApplyError as e:
-    print_error("transforming XML", options.fmt, e)
+if __name__ == '__main__':
+    main()
