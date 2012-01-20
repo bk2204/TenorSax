@@ -788,7 +788,8 @@ class LineParser:
                     ctxt = c if c != " " else ""
             elif pstate == k.IN_TEXT:
                 if c == "\n":
-                    ctxt += " " if env.fill else "\n"
+                    if len(ctxt) == 0 or ctxt[-1] != "\u200b":
+                        ctxt += " " if env.fill else "\n"
                     pstate = k.EOL
                 elif c == env.ec:
                     esc = self._parse_escape()
@@ -800,7 +801,8 @@ class LineParser:
                     ctxt += c
             elif pstate == k.IN_TEXTDELAY:
                 if c == "\n":
-                    ctxt += " " if env.fill else "\n"
+                    if len(ctxt) == 0 or ctxt[-1] != "\u200b":
+                        ctxt += " " if env.fill else "\n"
                     pstate = k.EOL
                 else:
                     ctxt += c
