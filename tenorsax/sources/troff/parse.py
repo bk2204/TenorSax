@@ -500,6 +500,8 @@ class LineParser:
                 self._next_character()
                 s += x
             return Comment(self.state, s)
+        elif c == "&":
+            return CharacterEscape(self.state, "\u200b")
         elif c == "$":
             try:
                 s = self._parse_escape_name()
