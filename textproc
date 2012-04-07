@@ -7,6 +7,7 @@ import sys
 import xml.sax.saxutils
 
 import tenorsax.sources.asciidoc.parse
+import tenorsax.sources.markdown.parse
 import tenorsax.filters.xslt
 
 try:
@@ -45,6 +46,7 @@ def find_first(type_, name):
 
 parser = optparse.OptionParser()
 parser.add_option("-T", dest="fmt", default="xml")
+parser.add_option("--format", dest="input", default="asciidoc")
 parser.add_option("-s", dest="stylesheet")
 parser.add_option("-o", dest="outfile")
 (options, args) = parser.parse_args()
@@ -60,7 +62,11 @@ elif options.fmt == "test-xml":
 else:
     ssheet = find_first("xslt", "format-" + options.fmt)
     f = tenorsax.filters.xslt.XSLTTransformer(writer, ssheet)
-p = tenorsax.sources.asciidoc.parse.AsciiDocParser(f)
+
+if options.input == "markdown":
+    p = tenorsax.sources.markdown.parse.MarkdownParser(f)
+else:
+    p = tenorsax.sources.asciidoc.parse.AsciiDocParser(f)
 
 filelist = []
 filelist.extend(args or ["/dev/stdin"])
