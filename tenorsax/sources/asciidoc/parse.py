@@ -25,11 +25,6 @@ import xml.sax.xmlreader
 from tenorsax.util import *
 from tenorsax.sources import FancyTextParser, Quote, QuoteParser
 
-def chomp(line):
-    if line[-1] == "\n":
-        return line[:-1]
-    return line
-
 class AsciiDocStateError(Exception):
     pass
 

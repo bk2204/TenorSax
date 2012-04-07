@@ -14,3 +14,8 @@ def trace(state, bit, *args):
     """Print a message to standard error if bit is set in state.trace."""
     if state.trace & bit:
         print(*args, file=sys.stderr)
+
+def chomp(line):
+    if line[-1] == "\n":
+        return line[:-1]
+    return line
