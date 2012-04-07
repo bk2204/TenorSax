@@ -92,10 +92,9 @@ class MarkdownParser(FancyTextParser):
                     raise NotImplementedError
                 elif line[0] in "#":
                     # One-line titles.
-                    m = re.match(r"(#{1,5})\s+(.*\S*)(\s+#+)?\s*$", line)
+                    m = re.match(r"(#{1,5})\s+(.*?\S*)(\s+#+)?\s*$", line)
                     if m is None:
                         self.state = k.TEXT_LINE
-                        self._generate_metadata(self.metadata)
                         self.data.append(line)
                     else:
                         l = len(m.group(1))
@@ -105,12 +104,10 @@ class MarkdownParser(FancyTextParser):
                     self.data.append(line)
             elif self.state == k.HEADER_LINE:
                 if linetype == "blank":
-                    self._generate_metadata(self.metadata)
                     self._flush()
                     self.state = k.PARA_START
                 elif line[0] in self.TITLE_CHARS:
                     level = self._handle_title_line(line)
-                    log("section title in header line")
                     if level != 0:
                         self.state = k.PARA_START
                 else:
@@ -119,7 +116,6 @@ class MarkdownParser(FancyTextParser):
                     self.state = k.IN_PARA
             elif self.state == k.IN_HEADER:
                 if linetype == "blank":
-                    self._generate_metadata(self.metadata)
                     self._flush()
                     self.state = k.PARA_START
             elif self.state == k.TEXT_LINE or self.state == k.IN_PARA:
@@ -139,11 +135,21 @@ class MarkdownParser(FancyTextParser):
                 if linetype == "block-style":
                     raise NotImplementedError
                 elif linetype == "blank":
-                    pass
+                    self._start_para()
+                    self.state = k.IN_PARA
+                elif line[0] in "#":
+                    # One-line titles.
+                    m = re.match(r"(#{1,5})\s+(.*?\S*)(\s+#+)?\s*$", line)
+                    if m is None:
+                        self.state = k.IN_PARA
+                        self.data.append(line)
+                        self._start_para()
+                    else:
+                        l = len(m.group(1))
+                        self._start_section(l, m.group(2))
                 else:
+                    self.state = k.HEADER_LINE
                     self.data.append(line)
-                self._start_para()
-                self.state = k.IN_PARA
             else:
                 raise NotImplementedError
             line = self._next_line()
@@ -158,27 +164,15 @@ class MarkdownParser(FancyTextParser):
         title = chomp(title)
         if self.state == MarkdownStateConstants.IN_PARA:
             self._flush()
+        if level == 0 and self.level > 0:
+            level = 1
         if level == 0:
-            if self.level == 0:
-                # Don't create a new element here because we already have a root
-                # element.
-                self._start_element("title")
-                self._process_text(title)
-                self._end_element("title")
-            else:
-                # Just start a paragraph, since we can't have more than one
-                # root element.
-                self._start_para()
-                self._process_text(title)
-                if line is not None:
-                    self._process_text(line)
-        elif level == self.level:
-            self._end_element("section")
-            self._start_element("section")
+            # Don't create a new element here because we already have a root
+            # element.
             self._start_element("title")
             self._process_text(title)
             self._end_element("title")
-        elif level < self.level:
+        elif level <= self.level:
             while level < self.level:
                 self._end_element("section")
                 self.level -= 1
