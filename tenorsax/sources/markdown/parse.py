@@ -22,16 +22,10 @@ import xml.sax.xmlreader
 from tenorsax.util import *
 from tenorsax.sources import FancyTextParser, Quote, QuoteParser
 
-class MarkdownStateError(Exception):
+class MarkdownStateError(tenorsax.sources.FancyTextParserStateError):
     pass
 
-class MarkdownStateConstants:
-    START = 1
-    PARA_START = 2
-    IN_PARA = 3
-    TEXT_LINE = 4
-    HEADER_LINE = 5
-    IN_HEADER = 6
+MarkdownStateConstants = tenorsax.sources.FancyTextParserStateConstants
 
 class MarkdownParser(FancyTextParser):
     TITLE_CHARS = "=-"

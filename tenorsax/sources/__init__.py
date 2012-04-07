@@ -172,3 +172,14 @@ class FancyTextParser(xml.sax.xmlreader.XMLReader):
         return self.eh
     def setErrorHandler(self, handler):
         self.eh = handler
+
+class FancyTextParserStateError(Exception):
+    pass
+
+class FancyTextParserStateConstants:
+    START = 0
+    TEXT_LINE = 1
+    PARA_START = 2
+    IN_PARA = 3
+    IN_HEADER = 4
+    HEADER_LINE = 5

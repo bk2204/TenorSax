@@ -25,16 +25,10 @@ import xml.sax.xmlreader
 from tenorsax.util import *
 from tenorsax.sources import FancyTextParser, Quote, QuoteParser
 
-class AsciiDocStateError(Exception):
+class AsciiDocStateError(tenorsax.sources.FancyTextParserStateError):
     pass
 
-class AsciiDocStateConstants:
-    START = 0
-    TEXT_LINE = 1
-    PARA_START = 2
-    IN_PARA = 3
-    IN_HEADER = 4
-    HEADER_LINE = 4
+AsciiDocStateConstants = tenorsax.sources.FancyTextParserStateConstants
 
 class AuthorParser:
     @staticmethod
