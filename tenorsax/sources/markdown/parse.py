@@ -40,6 +40,25 @@ class MarkdownParser(FancyTextParser):
         self.data = []
         self.level = 0
         self.inlines = []
+    def _handle_title_line(self, line):
+        log("start of line is title char", line[0])
+        try:
+            prev_line = self.data.pop()
+        except IndexError:
+            return None
+        l = len(prev_line)
+        # Allow give or take two characters.
+        pat = r"{0}{1}{3},{4}{2}$".format("\\" + line[0], "{", "}",
+                l - 2, l + 2)
+        m = re.match(pat, line)
+        if m is None:
+            self.data.append(prev_line)
+            self.data.append(line)
+            return None
+        else:
+            idx = self.TITLE_CHARS.index(line[0])
+            self._start_section(idx, prev_line, line)
+            return idx
     @staticmethod
     def _preprocess_for_tagging(text):
         return text
