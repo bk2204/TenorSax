@@ -77,16 +77,9 @@ class MarkdownParser(FancyTextParser):
             self._end_element("para")
             self.state = MarkdownStateConstants.PARA_START
         self.ch.ignorableWhitespace("\n")
-    def _parse_style(self, line):
-        mo = re.match(r"^\[(.*)\]$", line)
-        if mo is None:
-            return None
-        return re.split(r",\s*", mo.group(1))
     def _get_line_type(self, line):
         if re.match("^\s*$", line):
             return "blank"
-        elif self._parse_style(line):
-            return "block-style"
         else:
             return None
     def _next_line(self):
