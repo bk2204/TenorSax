@@ -81,12 +81,24 @@ class MarkdownParser(FancyTextParser):
             return self.lines.pop(0)
         except IndexError:
             raise StopIteration
+    def _handle_comments(self, line):
+        k = MarkdownStateConstants
+        mobj = re.match("^(.*)<!--\s((?:.*?\s|)-->)?(.*)$", line)
+        if mobj is None:
+            return line
+        if mobj.group(2) is None:
+            self.state = k.IN_PARA_COMMENT if self.state == k.IN_PARA else k.IN_COMMENT
+            self.data.append(mobj.group(1))
+            return ""
+        else:
+            return self._handle_comments(mobj.group(1) + mobj.group(3))
     def _do_state_machine(self):
         k = MarkdownStateConstants
         line = self._next_line()
         self.state = k.START
         while True:
             linetype = self._get_line_type(line)
+            line = self._handle_comments(line)
             if self.state == k.START:
                 if linetype == "block-style":
                     raise NotImplementedError
@@ -102,6 +114,11 @@ class MarkdownParser(FancyTextParser):
                 else:
                     self.state = k.HEADER_LINE
                     self.data.append(line)
+            elif self.state == k.IN_COMMENT or self.state == k.IN_PARA_COMMENT:
+                mobj = re.match("^.*?\s-->(.*)$", line)
+                if mobj is not None:
+                    self.data.append(self._handle_comments(mobj.group(1)))
+                    self.state = k.IN_PARA if self.state == k.IN_PARA_COMMENT else k.PARA_START
             elif self.state == k.HEADER_LINE:
                 if linetype == "blank":
                     self._flush()
@@ -121,7 +138,7 @@ class MarkdownParser(FancyTextParser):
             elif self.state == k.TEXT_LINE or self.state == k.IN_PARA:
                 if linetype == "block-style":
                     raise NotImplementedError
-                elif line[0] in self.TITLE_CHARS:
+                elif len(line) and line[0] in self.TITLE_CHARS:
                     self._handle_title_line(line)
                     log("section title in text line")
                 elif linetype == "blank":
@@ -137,7 +154,7 @@ class MarkdownParser(FancyTextParser):
                 elif linetype == "blank":
                     self._start_para()
                     self.state = k.IN_PARA
-                elif line[0] in "#":
+                elif len(line) and line[0] == "#":
                     # One-line titles.
                     m = re.match(r"(#{1,5})\s+(.*?\S*)(\s+#+)?\s*$", line)
                     if m is None:

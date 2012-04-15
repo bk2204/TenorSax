@@ -183,3 +183,5 @@ class FancyTextParserStateConstants:
     IN_PARA = 3
     IN_HEADER = 4
     HEADER_LINE = 5
+    IN_COMMENT = 6
+    IN_PARA_COMMENT = 7
