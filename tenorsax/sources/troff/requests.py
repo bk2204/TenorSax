@@ -146,6 +146,32 @@ class RequestImpl_end(XMLRequestImplementation):
         except:
             pass
 
+class RequestImpl_ft(RequestImplementation):
+    def _arg_flags(self, i):
+        return 0
+    def max_args(self):
+        return 1
+    def execute(self, callinfo):
+        args = callinfo.args
+        env = self.state.env[0]
+        if len(args) == 0 or args[0] == "P":
+            env.fonts[0], env.fonts[1] = env.fonts[1], env.fonts[0]
+        else:
+            val = 0
+            try:
+                val = int(args[0])
+            except ValueError:
+                try:
+                    val = self.state.font_names[args[0]]
+                except KeyError:
+                    pass
+            if val == 0:
+                return
+            val -= 1
+            env.fonts[0], env.fonts[1] = val, env.fonts[0]
+        self.state.ch.endInline()
+        self.state.ch.startInline()
+
 class RequestImpl_ie(RequestImplementation):
     def _arg_flags(self, i):
         return (self.F_CONDITIONAL, self.F_EXECUTABLE)[i]

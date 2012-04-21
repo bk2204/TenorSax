@@ -18,6 +18,7 @@ class Environment:
         self.c2 = "'"
         self.ec = '\\'
         self.fill = True
+        self.fonts = [1, 1]
 
 class ParsingError(Exception):
     def __init__(self, reason):
@@ -898,7 +899,27 @@ class ContentHandlerWrapper:
         self.stack.pop().end(self.ch)
         while len(self.stack) > 0 and hasattr(self.stack[-1], "prefix"):
             self.stack.pop().end(self.ch)
+    @classmethod
+    def _makeAttributes(klass, at):
+        values = {}
+        qnames = {}
+        for k, v in at.items():
+            values[(klass.NS_TROFF, k)] = v
+            qnames[(klass.NS_TROFF, k)] = "_troff:" + k
+        return Attributes(values, qnames)
+    def startInline(self, attrs=None):
+        if attrs is None:
+            at = self.state.fonts[self.state.env[0].fonts[0]].attributes()
+            attrs = self._makeAttributes(at)
+        self.startTroffElement("inline", attrs)
+    def endInline(self):
+        tos = self.stack[-1]
+        if hasattr(tos, "qname") and tos.qname == "_troff:inline":
+            self.endTroffElement("inline")
     def startBlock(self, attrs=None):
+        if attrs is None:
+            at = self.state.fonts[self.state.env[0].fonts[0]].attributes()
+            attrs = self._makeAttributes(at)
         self.startTroffElement("block", attrs)
     def endBlock(self, force=False):
         if len(self.stack) == 0:
@@ -922,6 +943,13 @@ class ContentHandlerWrapper:
     def endTroffElement(self, localname):
         self.endElementNS((self.NS_TROFF, localname), "_troff:"+localname)
 
+class Font:
+    def __init__(self, variant=None, weight=None):
+        self.variant = variant if variant is not None else "normal"
+        self.weight = weight if weight is not None else "normal"
+    def attributes(self):
+        return {"font-variant": self.variant, "font-weight": self.weight}
+
 class ParserState:
     F_EXTNAME = 1
     def __init__(self, env, flags):
@@ -933,6 +961,10 @@ class ParserState:
         self.copy_until = None
         self.copy_to = None
         self.macroargs = []
+        self.font_names = {"TR": 1, "R": 1, "TI": 2, "I": 2, "TB": 3, "B": 3,
+                "TBI": 4, "BI": 4}
+        self.fonts = [Font(), Font("italic"), Font(weight="bold"),
+                Font("italic", "bold")]
         self._initialize_requests()
         self.mapping = {
                 "xml": "http://www.w3.org/XML/1998/namespace"
