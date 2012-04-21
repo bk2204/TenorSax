@@ -1,6 +1,7 @@
 import decimal
 import io
 import os
+import re
 import string
 import sys
 import xml.sax.xmlreader
@@ -17,6 +18,9 @@ class Environment:
         self.cc = '.'
         self.c2 = "'"
         self.ec = '\\'
+        self.sdelim = "\U00102204"
+        self.edelim = "\U00102206"
+        self.fdelim = "\U00102205"
         self.fill = True
         self.fonts = [1, 1]
 
@@ -43,7 +47,26 @@ class CharacterData(ParseObject):
         self.state = state
         self.data = "".join(data)
     def invoke(self, lp):
-        self.state.ch.characters(self.data)
+        env = self.state.env[0]
+        pat = re.compile(''.join(["(", env.sdelim, "[^", env.edelim, "]+",
+            env.edelim, ")"]))
+        items = pat.split(self.data)
+        while True:
+            if len(items) == 1:
+                if items[0]:
+                    self.state.ch.characters(items[0])
+                break
+            else:
+                text = items.pop(0)
+                code = items.pop(0)[1:-1]
+                insn = code[0]
+                code = code[1:]
+                if text:
+                    self.state.ch.characters(text)
+                if insn == "x":
+                    args = code.split(env.fdelim)
+                    req = NonBreakingInvocable(self.state, *args)
+                    req.invoke(lp)
     def __str__(self):
         return self.data
 
