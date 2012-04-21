@@ -87,6 +87,10 @@
 		<xsl:call-template name="process-italic"/>
 	</xsl:template>
 
+	<xsl:template match="tr:main|tr:block">
+		<xsl:apply-templates/>
+	</xsl:template>
+
 	<xsl:template match="node()|@*">
 		<xsl:copy>
 			<xsl:apply-templates select="@*|node()"/>
