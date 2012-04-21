@@ -542,8 +542,10 @@ class LineParser:
             else:
                 if c == "f":
                     # FIXME: implement correctly
-                    self._parse_escape_name()
-                    return CharacterEscape(self.state, "")
+                    name = self._parse_escape_name()
+                    env = self.state.env[0]
+                    text = env.sdelim + "xft" + env.fdelim + name + env.edelim
+                    return CharacterEscape(self.state, text)
                 elif c in "{}":
                     return ConditionalEscape(self.state, c == "{")
         return CharacterEscape(self.state, "")
