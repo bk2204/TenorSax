@@ -5,6 +5,7 @@
 	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 	xmlns:cc="http://creativecommons.org/ns#"
 	xmlns:t="http://ns.crustytoothpaste.net/text-markup"
+	xmlns:tr="http://ns.crustytoothpaste.net/troff"
 	xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 	exclude-result-prefixes="t d">
 	<xsl:output method="xml" encoding="UTF-8"/>
@@ -50,15 +51,45 @@
 
 	<xsl:template match="t:para[count(node()) = 0]"/>
 
-	<xsl:template match="node()|@*">
-		<xsl:copy>
-			<xsl:apply-templates select="@*|node()"/>
-		</xsl:copy>
-	</xsl:template>
-
 	<xsl:template name="info">
 		<info>
 			<title><xsl:apply-templates select="t:title" mode="info"/></title>
 		</info>
+	</xsl:template>
+
+	<xsl:template name="process-bold">
+		<xsl:choose>
+			<xsl:when test="ancestor-or-self::*[@tr:font-weight][1][@tr:font-weight='bold']">
+				<d:emphasis role="strong">
+					<xsl:apply-templates/>
+				</d:emphasis>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:apply-templates/>
+			</xsl:otherwise>
+		</xsl:choose>
+	</xsl:template>
+
+	<xsl:template name="process-italic">
+		<xsl:choose>
+			<xsl:when test="ancestor-or-self::*[@tr:font-variant][1][@tr:font-variant='italic']">
+				<d:emphasis>
+					<xsl:call-template name="process-bold"/>
+				</d:emphasis>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:call-template name="process-bold"/>
+			</xsl:otherwise>
+		</xsl:choose>
+	</xsl:template>
+
+	<xsl:template match="tr:inline">
+		<xsl:call-template name="process-italic"/>
+	</xsl:template>
+
+	<xsl:template match="node()|@*">
+		<xsl:copy>
+			<xsl:apply-templates select="@*|node()"/>
+		</xsl:copy>
 	</xsl:template>
 </xsl:stylesheet>
