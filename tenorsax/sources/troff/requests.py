@@ -146,6 +146,14 @@ class RequestImpl_end(XMLRequestImplementation):
         except:
             pass
 
+class RequestImpl_ex(RequestImplementation):
+    def _arg_flags(self, i):
+        return 0
+    def max_args(self):
+        return 0
+    def execute(self, callinfo):
+        raise StopIteration
+
 class RequestImpl_ft(RequestImplementation):
     def _arg_flags(self, i):
         return 0

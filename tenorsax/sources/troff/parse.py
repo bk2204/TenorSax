@@ -206,6 +206,8 @@ class Invocable(StringNamespacedParseObject):
                 trace(self.state, TRACE_UNDEF, "request", self.name,
                     "is not defined")
             res = self.state.requests[self.name](self.state).execute(self)
+        except StopIteration:
+            raise
         except Exception:
             pass
         if res is not None:
@@ -1094,6 +1096,8 @@ class Parser:
                 log(item, type(item))
                 item.invoke(self.lp)
         except IndexError:
+            pass
+        except StopIteration:
             pass
         self._tear_down()
  
