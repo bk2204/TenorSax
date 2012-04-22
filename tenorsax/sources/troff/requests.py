@@ -376,3 +376,11 @@ class RequestImpl_tenorsax(RequestImplementation):
             self.state.filename = args[1]
         elif args[0] == "trace":
             self.state.trace = int(args[1])
+        elif args[0] == "get-implementation":
+            name = args[1]
+            self.state.numregs[name] = IntegerNumberRegister(self.state, name,
+                0x00626d63, 0, "0")
+        elif args[0] == "get-ext":
+            name = args[1]
+            self.state.numregs[name] = IntegerNumberRegister(self.state, name,
+                int(bool(self.state.flags[0])), 0, "0")

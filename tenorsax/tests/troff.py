@@ -267,15 +267,21 @@ class FloatTests(TroffToTextTestCase):
 
 class ExtensionTests(TroffToTextTestCase):
     def setUp(self):
-        self.aa = ".de AA\ndisabled\n.br\n..\n.do de AAA\nenabled\n.br\n..\n"
+        self.a = ".de AA\ndisabled\n.br\n.BB\n..\n.do de AAA\nenabled\n.br\n.BB\n..\n"
+        self.b = ".de BB\n.do tenorsax get-ext ex\n\\\\n(ex\n.br\n..\n"
+        self.aa = self.a + self.b
     def test_default(self):
-        self.assertEqual(self.t_run(self.aa + ".AAA\n"), "disabled\n")
+        self.assertEqual(self.t_run(self.aa + ".AAA\n"), "disabled\n0\n")
     def test_enable(self):
-        self.assertEqual(self.t_run(self.aa + ".do tenorsax ext 1\n.AAA\n"), "enabled\n")
+        self.assertEqual(self.t_run(self.aa + ".do tenorsax ext 1\n.AAA\n"),
+                "enabled\n1\n")
     def test_disabled(self):
-        self.assertEqual(self.t_run(self.aa + ".do tenorsax ext 0\n.AAA\n"), "disabled\n")
+        self.assertEqual(self.t_run(self.aa + ".do tenorsax ext 0\n.AAA\n"),
+                "disabled\n0\n")
     def test_disable(self):
-        self.assertEqual(self.t_run(self.aa + ".do tenorsax ext 1\n.do tenorsax ext 0\n.AAA\n"), "disabled\n")
+        self.assertEqual(self.t_run(self.aa + ".do tenorsax ext 1\n.do tenorsax ext 0\n.AAA\n"), "disabled\n0\n")
+    def test_implementation(self):
+        self.assertEqual(self.t_run(".do tenorsax get-implementation im\n\\n(im\n"), "6450531\n")
 
 class ConditionalTests(TroffToTextTestCase):
     def setUp(self):
