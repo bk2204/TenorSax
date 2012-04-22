@@ -71,7 +71,8 @@ else:
 filelist = []
 filelist.extend(args or ["/dev/stdin"])
 try:
-    p.parse(fileinput.input(files=filelist))
+    p.parse(fileinput.input(files=filelist,
+        openhook=fileinput.hook_encoded("UTF-8"))
     fp.write("\n")
 except XSLTApplyError as e:
     print_error("transforming XML", options.fmt, e)

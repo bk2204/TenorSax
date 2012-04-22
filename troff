@@ -77,7 +77,8 @@ def main():
     if init is not None:
         filelist[0:0] = [init]
     try:
-        p.parse(fileinput.input(files=filelist))
+        p.parse(fileinput.input(files=filelist,
+            openhook=fileinput.hook_encoded("UTF-8")))
     except XSLTApplyError as e:
         print_error("transforming XML", options.fmt, e)
 
