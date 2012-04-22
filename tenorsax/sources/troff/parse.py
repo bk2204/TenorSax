@@ -921,7 +921,11 @@ class ContentHandlerWrapper:
         self.stack.append(ElementStackItem(name, qname))
         self.ch.startElementNS(name, qname, attrs)
     def endElementNS(self, name, qname):
-        self.stack.pop().end(self.ch)
+        while len(self.stack) > 0:
+            item = self.stack.pop()
+            item.end(self.ch)
+            if hasattr(item, "qname") and item.qname == qname:
+                break
         while len(self.stack) > 0 and hasattr(self.stack[-1], "prefix"):
             self.stack.pop().end(self.ch)
     @classmethod
