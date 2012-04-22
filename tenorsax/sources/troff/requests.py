@@ -270,6 +270,21 @@ class RequestImpl_nrf(NumberRegisterRequestImplementation):
         self.state.numregs[name] = FloatNumberRegister(self.state, name,
                 self._value(curval, diff), inc, "0")
 
+class RequestImpl_recursionlimit(RequestImplementation):
+    def _arg_flags(self, i):
+        return (self.F_NUMERIC, self.F_NUMERIC)[i]
+    def max_args(self):
+        return 2
+    def execute(self, callinfo):
+        args = callinfo.args
+        if len(args) < 2:
+            return
+        try:
+            val = int(args[1])
+            self.state.recursionlimit = val if val else 1 << 32
+        except ValueError:
+            pass
+
 class RequestImpl_rm(RequestImplementation):
     def _arg_flags(self, i):
         return (self.F_NAME,)[i]

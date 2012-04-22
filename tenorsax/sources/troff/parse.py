@@ -13,6 +13,9 @@ import tenorsax.sources.troff.stringlike
 
 from tenorsax.util import *
 
+class StackDepthExceededError(Exception):
+    pass
+
 class Environment:
     def __init__(self):
         self.cc = '.'
@@ -302,6 +305,7 @@ class LineParser:
         self.brk = False
         self.name = None
         self.curreq = None
+        self.recursion = 0
     def append(self):
         self.items.append(self.ctxt)
         ctxt = ""
@@ -352,11 +356,18 @@ class LineParser:
                 log("chartrap", len(self.chartrap), "sprung")
                 self.chartrap.pop()
                 self.state.macroargs.pop()
+                self.recursion -= 1
         return c
     def inject(self, more, args=None):
         s = str(more)
         self.data.extend(reversed(list(s)))
         if args is not None:
+            self.recursion += 1
+            log("recursion limit is %d (%d) for args %s" % (self.state.recursion,
+                self.recursion, args))
+            if self.recursion > self.state.recursion:
+                raise StackDepthExceededError(("recursion %d is greater " +
+                "than limit %d") % (self.recursion, self.state.recursion))
             self.chartrap.append(len(s))
             self.state.macroargs.append(args)
             log("inserting trap", len(self.chartrap), "for", len(s))
@@ -990,6 +1001,7 @@ class ParserState:
         self.copy_until = None
         self.copy_to = None
         self.macroargs = []
+        self.recursion = 512
         self.font_names = {"TR": 1, "R": 1, "TI": 2, "I": 2, "TB": 3, "B": 3,
                 "TBI": 4, "BI": 4}
         self.fonts = [Font(), Font("italic"), Font(weight="bold"),
