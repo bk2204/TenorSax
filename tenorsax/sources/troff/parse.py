@@ -1004,6 +1004,7 @@ class ParserState:
         self.copy_until = None
         self.copy_to = None
         self.macroargs = []
+        self.macrodirs = []
         self.recursion = 512
         self.font_names = {"TR": 1, "R": 1, "TI": 2, "I": 2, "TB": 3, "B": 3,
                 "TBI": 4, "BI": 4}

@@ -217,6 +217,33 @@ class RequestImpl_ig(RequestImplementation):
         else:
             self.state.set_copy_mode(None, args[0])
 
+class RequestImpl_mso(RequestImplementation):
+    def _arg_flags(self, i):
+        return 0
+    def max_args(self):
+        return 1
+    def execute(self, callinfo):
+        args = callinfo.args
+        if len(args) == 0:
+            return
+        s = ""
+        for md in self.state.macrodirs:
+            for suffix in ("", ".tmac"):
+                path = os.path.expanduser(md + "/" + args[0] + suffix)
+                if not path.startswith("/"):
+                    d = os.path.dirname(self.state.filename)
+                    path = os.path.join(d, path)
+                log("path", path)
+                try:
+                    s += '.do tenorsax filename "' + path + '"\n'
+                    with open(path) as fp:
+                        s += "".join(fp.readlines())
+                    s += '.do tenorsax filename "' + self.state.filename + '"\n'
+                    return (s, None)
+                except:
+                    pass
+        return (s, None)
+
 class RequestImpl_namespace(RequestImplementation):
     def _arg_flags(self, i):
         return 0
@@ -382,6 +409,8 @@ class RequestImpl_tenorsax(RequestImplementation):
             self.state.flags[0] = ~0 if self._get_boolean(args[1]) else 0
         elif args[0] == "filename":
             self.state.filename = args[1]
+        elif args[0] == "macrodir":
+            self.state.macrodirs.append(args[1])
         elif args[0] == "trace":
             self.state.trace = int(args[1])
         elif args[0] == "get-implementation":
