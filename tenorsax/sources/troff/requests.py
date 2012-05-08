@@ -226,23 +226,21 @@ class RequestImpl_mso(RequestImplementation):
         args = callinfo.args
         if len(args) == 0:
             return
-        s = ""
         for md in self.state.macrodirs:
             for suffix in ("", ".tmac"):
                 path = os.path.expanduser(md + "/" + args[0] + suffix)
-                if not path.startswith("/"):
-                    d = os.path.dirname(self.state.filename)
-                    path = os.path.join(d, path)
                 log("path", path)
+                s = ""
                 try:
                     s += '.do tenorsax filename "' + path + '"\n'
                     with open(path) as fp:
                         s += "".join(fp.readlines())
                     s += '.do tenorsax filename "' + self.state.filename + '"\n'
+                    log("path successful")
                     return (s, None)
                 except:
                     pass
-        return (s, None)
+        return ("", None)
 
 class RequestImpl_namespace(RequestImplementation):
     def _arg_flags(self, i):
