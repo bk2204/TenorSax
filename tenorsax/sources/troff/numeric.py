@@ -37,3 +37,26 @@ class FloatNumberRegister(NumberRegister):
             # decimal.localcontext().
             return str(self.val) + ".0"
         return str(self.val)
+
+class SpecialNumberRegister(NumberRegister):
+    def __init__(self, state, name, callback):
+        self.state = state
+        self.name = name
+        self.callback = callback
+    def increment(self):
+        pass
+    def decrement(self):
+        pass
+    def value(self, inc=0):
+        return str(self)
+    def __call__(self, state):
+        self.state = state
+        return self
+    def __str__(self):
+        return str(self.callback(self))
+
+def initialize_registers(state):
+    regs = {}
+    regs[".$"] = SpecialNumberRegister(state, ".$", lambda x:
+            len(x.state.macroargs[-1])-1 if len(x.state.macroargs) else 0)
+    return regs

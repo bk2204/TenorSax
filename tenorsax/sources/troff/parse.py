@@ -145,6 +145,7 @@ class NumericEscape(Escape):
             if self.val is None:
                 self.reg = self.state.numregs[self.name](self.state)
                 self.val = self.reg.value(self.increment)
+            log("name", self.name)
             log("reg", self.reg, self.increment)
             log("regv", self.val)
             s = str(self.val)
@@ -1009,6 +1010,7 @@ class ParserState:
         self.fonts = [Font(), Font("italic"), Font(weight="bold"),
                 Font("italic", "bold")]
         self._initialize_requests()
+        self._initialize_numregs()
         self.mapping = {
                 "xml": "http://www.w3.org/XML/1998/namespace"
         }
@@ -1019,6 +1021,8 @@ class ParserState:
         for k, v in tenorsax.sources.troff.requests.__dict__.items():
             if k.startswith("RequestImpl_"):
                 self.requests[k[12:]] = v
+    def _initialize_numregs(self):
+        self.numregs = tenorsax.sources.troff.numeric.initialize_registers(self)
     def set_copy_mode(self, macro, ending):
         if ending is None:
             self.copy_to = None
