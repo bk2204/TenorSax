@@ -1,0 +1,54 @@
+.do tenorsax ext 1
+.namespace db http://docbook.org/ns/docbook
+.namespace dc http://purl.org/dc/elements/1.1/
+.namespace xl http://www.w3.org/1999/xlink
+.namespace xi http://www.w3.org/2001/XInclude
+.mso edb
+.de info
+.start db:info
+..
+.de einfo
+.end db:info
+..
+.de title
+.start db:title
+\\$1\c
+.end db:title
+..
+.de pre
+.start db:literallayout xml:space=preserve class=\\$1
+.nr @literallayout 1
+..
+.de subject
+.start dc:subject
+\\$1\c
+.end dc:subject
+..
+.de include
+.ie \\n(.$=2 .start xi:include href="\\$1" xpointer="\\$2"
+.el .start xi:include href="\\$1"
+.end xi:include
+..
+.de date
+.start db:date
+\\$1\c
+.end db:date
+..
+.de bloglink
+.start db:releaseinfo
+.start db:link xl:href=\\$1
+.end db:link
+.end db:releaseinfo
+..
+.\" Aliases.
+.als book @start-book
+.als ebook @end-book
+.als article @start-article
+.als earticle @end-article
+.als epre @end-literallayout
+.als epara @end-para
+.als epp @end-para
+.als para pp
+.\" Initialize.
+.@init
+.\" vim: set ft=groff:

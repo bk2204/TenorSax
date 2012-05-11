@@ -1,0 +1,160 @@
+.namespace db http://docbook.org/ns/docbook
+.de @init
+.nr @info 0
+.nr @title 0
+.nr @para 0
+.nr @section 0
+.nr @literallayout 0
+.nr @book 0
+.nr @article 0
+..
+.de @start-book
+.ie !\\n(.$ .start db:book version=5.0
+.el \{
+.ds @id \\$1
+.start db:book version=5.0 xml:id=\\$1
+.\}
+.nr @book 1
+..
+.de @end-book
+.if \\n[@book] .end db:book
+.nr @book 0
+..
+.de @start-article
+.ie !\\n(.$ .start db:article version=5.0
+.el \{
+.ds @id \\$1
+.start db:article version=5.0 xml:id=\\$1
+.\}
+.nr @article 1
+..
+.de @end-article
+.if \\n[@article] .end db:article
+.nr @article 0
+..
+.de @start-info
+.start db:info
+.nr @info 1
+..
+.de @end-info
+.if \\n[@info] .end db:info
+.nr @info 0
+..
+.de @start-title
+.start db:title
+.nr @title 1
+..
+.de @end-title
+.if \\n[@title] .end db:title
+.nr @title 0
+..
+.de @start-author
+.start db:author
+.nr @author 1
+..
+.de @end-author
+.if \\n[@author] .end db:author
+.nr @author 0
+..
+.de @start-personname
+.start db:personname
+.nr @personname 1
+..
+.de @end-personname
+.if \\n[@personname] .end db:personname
+.nr @personname 0
+..
+.de @start-authorgroup
+.start db:authorgroup
+.nr @authorgroup 1
+..
+.de @end-authorgroup
+.if \\n[@authorgroup] .end db:authorgroup
+.nr @authorgroup 0
+..
+.de @start-affiliation
+.start db:affiliation
+.nr @affiliation 1
+..
+.de @end-affiliation
+.if \\n[@affiliation] .end db:affiliation
+.nr @affiliation 0
+..
+.de @start-abstract
+.start db:abstract
+.nr @abstract 1
+..
+.de @end-abstract
+.if \\n[@abstract] .end db:abstract
+.nr @abstract 0
+..
+.de @start-para
+.start db:para
+.nr @para 1
+..
+.de @end-para
+.if \\n[@para] .end db:para
+.nr @para 0
+..
+.de @start-literallayout
+.start db:literallayout
+.nr @literallayout 1
+..
+.de @end-literallayout
+.if \\n[@literallayout] .end db:literallayout
+.nr @literallayout 0
+..
+.de @start-section
+.start db:section
+..
+.de @end-section
+.end db:section
+..
+.de @start-chapter
+.start db:chapter
+..
+.de @end-chapter
+.end db:chapter
+..
+.de @start-appendix
+.start db:appendix
+..
+.de @end-appendix
+.end db:appendix
+..
+.de @start-preface
+.start db:preface
+..
+.de @end-preface
+.end db:preface
+..
+.de @start-abstract
+.start db:abstract
+..
+.de @end-abstract
+.end db:abstract
+..
+.de @end-blocks
+.@end-title
+.@end-author
+.@end-affiliation
+.@end-authorgroup
+.@end-info
+.@end-para
+.@end-literallayout
+..
+.de nf
+.@end-blocks
+.@start-literallayout
+..
+.de @fini
+.@end-blocks
+.while \\n[@section] .@end-section
+.@end-article
+.@end-book
+..
+.em @fini
+.@init
+.\".@start-book
+.\".@start-info
+.\" vim: set ft=groff:

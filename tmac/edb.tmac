@@ -1,0 +1,224 @@
+.mso db
+.de pp
+.@end-blocks
+.@start-para
+..
+.de nf
+.@end-blocks
+.@start-literallayout
+..
+.de b
+.start db:emphasis role=strong
+\\$1\c
+.end db:emphasis
+\\$2
+..
+.de i
+.start db:emphasis
+\\$1\c
+.end db:emphasis
+\\$2
+..
+.de q
+.start db:quote
+\\$1\c
+.end db:quote
+\\$2
+..
+.de sh
+.@end-blocks
+.ie \\n[@section]<\\$1 \{
+.nr @section \\n[@section]+1
+.\}
+.el .ie \\n[@section]>\\$1 \{
+.@end-section
+.@end-section
+.nr @section \\n[@section]-1
+.\}
+.el \{
+.@end-section
+.\}
+.@start-section
+..
+.de ++
+.if '\\$1'C'  .ds @location chapter
+.if '\\$1'RC' .ds @location chapter
+.if '\\$1'A'  .ds @location appendix
+.if '\\$1'RA' .ds @location appendix
+.if '\\$1'P'  .ds @location preface
+.if '\\$1'AB' .ds @location abstract
+..
+.de +c
+.@end-blocks
+.start db:\*[@location]
+.nr @location 1
+..
+.als lp pp
+.\" Unimplemented macros.
+.de ip
+..
+.de np
+..
+.de bu
+..
+.de sx
+..
+.de uh
+..
+.de $p
+..
+.de $0
+..
+.de $1
+..
+.de $2
+..
+.de $3
+..
+.de $4
+..
+.de $5
+..
+.de $6
+..
+.de he
+..
+.de fo
+..
+.de eh
+..
+.de oh
+..
+.de ef
+..
+.de of
+..
+.de hx
+..
+.de m1
+..
+.de m2
+..
+.de m3
+..
+.de m4
+..
+.de ep
+..
+.de (l
+..
+.de )l
+..
+.de (b
+..
+.de )b
+..
+.de (q
+..
+.de )q
+..
+.de (z
+..
+.de )z
+..
+.de (c
+..
+.de )c
+..
+.de (d
+..
+.de )d
+..
+.de pd
+..
+.de (f
+..
+.de )f
+..
+.de $s
+..
+.de (x
+..
+.de )x
+..
+.de xp
+..
+.de 2c
+..
+.de 1c
+..
+.de bc
+..
+.de sz
+..
+.de r
+..
+.de u
+..
+.de q
+..
+.de bi
+..
+.de bx
+..
+.de sm
+..
+.de ix
+..
+.de bl
+..
+.de pa
+..
+.de ro
+..
+.de ar
+..
+.de n1
+..
+.de n2
+..
+.de sk
+..
+.de EQ
+..
+.de EN
+..
+.de TS
+..
+.de TH
+..
+.de TE
+..
+.de PS
+..
+.de PE
+..
+.de IS
+..
+.de IE
+..
+.de IF
+..
+.de GS
+..
+.de GE
+..
+.de GF
+..
+.de re
+..
+.de ba
+..
+.de xl
+..
+.de ll
+..
+.de hl
+..
+.de tp
+..
+.de $c
+..
+.de $C
+..
+.\" vim: set ft=groff:
