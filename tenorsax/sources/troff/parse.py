@@ -857,8 +857,15 @@ class LineParser:
                 else:
                     ctxt += c
                     pstate = k.IN_COPY
-                if ctxt.endswith(self.state.copy_until):
-                    s = ctxt[:-len(self.state.copy_until)] + "\n"
+                until = self.state.copy_until
+                if self.state.copy_start:
+                    until = until[1:]
+                log("character is", c)
+                log("copy_start is", self.state.copy_start)
+                log("until is", until)
+                if ctxt.endswith(until):
+                    log("endswith is True")
+                    s = ctxt[:-len(until)] + "\n"
                     mdata = tenorsax.sources.troff.stringlike.MacroData(self.state, s)
                     if self.state.copy_to is not None:
                         self.state.requests[self.state.copy_to] = mdata
@@ -869,6 +876,7 @@ class LineParser:
                 if c == "\n":
                     pstate = k.EOL
             if pstate == k.EOL:
+                self.state.copy_start = False
                 log("eol ctxt", ctxt)
                 if ctxt:
                     self.items.append(ctxt)
@@ -1003,6 +1011,7 @@ class ParserState:
         self.nregs = {}
         self.copy_until = None
         self.copy_to = None
+        self.copy_start = False
         self.macroargs = []
         self.macrodirs = []
         self.recursion = 512
@@ -1031,6 +1040,7 @@ class ParserState:
             return
         if ending == "":
             ending = self.env[0].cc
+        self.copy_start = True
         self.copy_until = "\n" + self.env[0].cc + ending
         self.copy_to = macro
     def push_flags(self, flags):

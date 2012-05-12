@@ -150,6 +150,22 @@ class MacroTests(TroffToTextTestCase):
     def test_self_name_string(self):
         self.assertEqual(self.t_run(self.na + '\\*(NA arg\n'),
                 "arg\n")
+    def test_empty_macro(self):
+        self.assertEqual(self.t_run(r'''.de AA
+..
+.de BB
+..
+.ie dBB success
+.el failure
+'''), 'success\n')
+    def test_copy_mode_ending(self):
+        self.assertEqual(self.t_run(r'''.de AA
+..
+.de BB
+success.
+..
+.BB
+'''), 'success.\n')
     def test_arguments(self):
         self.assertEqual(self.t_run(r'''.de AA
 \\$2
