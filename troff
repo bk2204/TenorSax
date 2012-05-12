@@ -91,6 +91,7 @@ def main():
             openhook=fileinput.hook_encoded("UTF-8")))
     except XSLTApplyError as e:
         print_error("transforming XML", options.fmt, e)
+    output.flush()
 
 if __name__ == '__main__':
     if "TENORSAX_PROFILE" in os.environ:
