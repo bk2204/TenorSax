@@ -7,6 +7,7 @@ import os.path
 import sys
 import xml.sax.saxutils
 
+import tenorsax.generators
 import tenorsax.sources.troff.parse
 import tenorsax.filters.xslt
 
@@ -57,12 +58,17 @@ def main():
     output = sys.stdout
     if options.output is not None:
         output = open(options.output, "w", encoding="UTF-8")
-    
-    writer = xml.sax.saxutils.XMLGenerator(output, "UTF-8")
+
+    if options.fmt == "sax":
+        writer = tenorsax.generators.SAXGenerator(output)
+    else:
+        writer = xml.sax.saxutils.XMLGenerator(output, "UTF-8", True)
     if options.stylesheet:
         f = tenorsax.filters.xslt.XSLTTransformer(writer, options.stylesheet)
     elif options.fmt == "test":
         f = tenorsax.filters.xslt.TextXSLTTransformer(output, "xslt/trim.xsl")
+    elif options.fmt == "sax":
+        f = writer
     else:
         ssheet = find_first("xslt", "format-" + options.fmt)
         if ssheet is not None:
