@@ -378,7 +378,7 @@ class RequestImpl_start(XMLRequestImplementation):
                 item = i.split("=", 2)
                 attr = self._tuple_from_qname(item[0])
                 attrs[(attr[1], attr[2])] = item[1]
-                qnames[attr[3]] = item[1]
+                qnames[(attr[1], attr[2])] = attr[3]
             self.state.ch.startElementNS((element[1], element[2]), element[3],
                     Attributes(attrs, qnames))
         except:
