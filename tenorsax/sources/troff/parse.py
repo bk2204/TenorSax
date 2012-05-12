@@ -938,8 +938,14 @@ class ContentHandlerWrapper:
     def endPrefixMapping(self, prefix):
         self.stack.pop().end(self.ch)
     def startElementNS(self, name, qname, attrs):
+        mapping = {}
         if ':' in qname:
-            self.startPrefixMapping(qname.split(':')[0], name[0])
+            mapping[qname.split(':')[0]] = name[0]
+        for aqname in attrs.getQNames():
+            if ':' in aqname:
+                mapping[aqname.split(':')[0]] = attrs.getNameByQName(aqname)[0]
+        for prefix, uri in mapping.items():
+            self.startPrefixMapping(prefix, uri)
         self.stack.append(ElementStackItem(name, qname))
         self.ch.startElementNS(name, qname, attrs)
     def endElementNS(self, name, qname):
